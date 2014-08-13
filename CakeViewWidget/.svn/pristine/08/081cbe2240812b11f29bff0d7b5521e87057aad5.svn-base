@@ -1,0 +1,53 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <Button 
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="btn"/>
+
+   
+    <Button 
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="btn"/>
+    <Button 
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="btn"/>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <com.acorn.cakeviewwidget.CakeSurfaceView
+            android:id="@+id/cakeSurfaceView1"
+            android:layout_width="260dp"
+            android:layout_height="300dp"
+            android:layout_marginLeft="12dp"
+            android:layout_marginRight="12dp" />
+
+        <LinearLayout
+            android:id="@+id/ll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/cakeSurfaceView1"
+            android:orientation="horizontal"
+            android:visibility="visible" >
+
+            <Button
+                android:id="@+id/btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="begin" />
+
+            <Button
+                android:id="@+id/btn2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="begin2" />
+        </LinearLayout>
+    </RelativeLayout>
+
+</LinearLayout>
