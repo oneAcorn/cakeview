@@ -27,7 +27,7 @@ public class MainActivity extends Activity {
 		cakeValues2.add(new CakeSurfaceView.CakeValue("猫猫猫", 10f,"我是猫,我是item0.我是猫,我是item0.我是猫,我是item0.我是猫,我是item0.我是猫,我是item0.我是猫,我是item0.我是猫,我是item0."));
 		cakeValues2.add(new CakeSurfaceView.CakeValue("狗狗狗", 0f,"狗狗狗,item1.狗狗狗,item1.狗狗狗,item1.狗狗狗,item1.狗狗狗,item1.狗狗狗,item1.狗狗狗,item1.狗狗狗,item1.狗狗狗,item1.狗狗狗,item1."));
 		cakeValues2.add(new CakeSurfaceView.CakeValue("人人人", 0f,"人,item2.人,item2.人,item2.人,item2.人,item2.人,item2.人,item2.人,item2.人,item2.人,item2.人,item2.人,item2.人,item2.人,item2.人,item2."));
-		cakeValues2.add(new CakeSurfaceView.CakeValue("蚊子", 0f,"蚊子,item3.蚊子,item3.蚊子,item3.蚊子,item3.蚊子,item3.蚊子,item3.蚊子,item3.蚊子,item3.蚊子,item3.蚊子,item3.蚊子,item3.蚊子,item3.蚊子,item3.蚊子,item3."));
+		cakeValues2.add(new CakeSurfaceView.CakeValue("acorn", 20f,"橡果"));
 		cakeValues2.add(new CakeSurfaceView.CakeValue("瓜皮", 26f,"瓜皮,item4.瓜皮,item4.瓜皮,item4.瓜皮,item4.瓜皮,item4.瓜皮,item4.瓜皮,item4.瓜皮,item4.瓜皮,item4.瓜皮,item4.瓜皮,item4."));
 		cakeValues2.add(new CakeSurfaceView.CakeValue("鸭嘴兽", 1f,"鸭嘴兽,item5.鸭嘴兽,item5.鸭嘴兽,item5.鸭嘴兽,item5.鸭嘴兽,item5.鸭嘴兽,item5.鸭嘴兽,item5.鸭嘴兽,item5.鸭嘴兽,item5."));
 		cakeValues2.add(new CakeSurfaceView.CakeValue("面包", 0f,"面包,item6.面包,item6.面包,item6.面包,item6.面包,item6.面包,item6.面包,item6.面包,item6.面包,item6.面包,item6.面包,item6.面包,item6."));
