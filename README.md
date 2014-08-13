@@ -3,11 +3,9 @@ cakeview
 
 <h3>带动画的饼图</h3>
 
-![github](https://github.com/oneAcorn/cakeview/blob/master/cake1.png)
-![github](https://github.com/oneAcorn/cakeview/blob/master/cake2.png)
-![github](https://github.com/oneAcorn/cakeview/blob/master/cake3.png)
 ![github](https://github.com/oneAcorn/cakeview/blob/master/cakegif1.gif)
 ![github](https://github.com/oneAcorn/cakeview/blob/master/cakegif2.gif)
+![github](https://github.com/oneAcorn/cakeview/blob/master/cake2.png)
 
 <h3>详细说明参见:</h3>
 http://www.eoeandroid.com/thread-540249-2-1.html
