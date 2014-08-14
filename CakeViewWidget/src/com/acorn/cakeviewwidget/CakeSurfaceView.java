@@ -35,7 +35,8 @@ import android.view.animation.OvershootInterpolator;
  * 
  */
 @SuppressLint("NewApi")
-public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
+public class CakeSurfaceView extends SurfaceView implements
+		SurfaceHolder.Callback {
 	private RectF cakeRect;
 	private static final float ANGLE_NUM = 3.6f;
 	private static final boolean isDrawByAnim = true;
@@ -47,8 +48,9 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 	private static final float TEXT_LINE_SPACE = 20;
 	/** cakeView的宽高 */
 	private int width, height;
-	private final int[] ARC_COLORS = new int[] { 0xff4F50A0, 0xff649B9A, 0xffF9BB08, 0xffA4529C, 0xffff6f2f,
-			0xff990099, 0xff999999, 0xff663300 };
+	private final int[] ARC_COLORS = new int[] { 0xff4F50A0, 0xff649B9A,
+			0xffF9BB08, 0xffA4529C, 0xffff6f2f, 0xff990099, 0xff999999,
+			0xff663300 };
 	private Paint paint;
 	/** 起始角度 */
 	private float startAngle = 0;
@@ -184,28 +186,37 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 				int clickPosition = getClickPosition();
 				if (clickPosition == -1)
 					break;
+				if (cakeValues.get(clickPosition).value != 100f) { //如果只有一个的情况下,就不高亮
+					if (!rotaValueAnimator.isRunning()
+							&& !cakeValueAnimator.isRunning()
+							&& !highLightValueAnimator.isRunning()
+							&& textGravity == Gravity.bottom) {
+						if (isHighLigntMode) {
+							isHighLigntMode = false;
+							highLightValueAnimator.reverse();
+							break;
+						} else {
+							isHighLigntMode = true;
+						}
 
-				if (!rotaValueAnimator.isRunning() && !cakeValueAnimator.isRunning()
-						&& !highLightValueAnimator.isRunning() && textGravity == Gravity.bottom) {
-					if (isHighLigntMode) {
-						isHighLigntMode = false;
-						highLightValueAnimator.reverse();
-						break;
-					} else {
-						isHighLigntMode = true;
+						curClickItem = clickPosition;
+						float toRotaAngle = 0;
+						float sAngle = startAngle
+								+ (clickPosition > 0 ? itemFrame[clickPosition - 1]
+										: 0) * ANGLE_NUM;
+						float tAngle = startAngle + itemFrame[clickPosition]
+								* ANGLE_NUM;
+						// 当前点击的扇形的中心点的角度
+						float curItemCenterAngle = sAngle + (tAngle - sAngle)
+								/ 2;
+						toRotaAngle = startAngle + (90 - curItemCenterAngle);
+						rotaValues = PropertyValuesHolder.ofFloat("rotation",
+								startAngle, toRotaAngle);
+						rotaValueAnimator.setDuration(Math
+								.abs((int) (toRotaAngle - startAngle)) * 5);
+						rotaValueAnimator.setValues(rotaValues);
+						rotaValueAnimator.start();
 					}
-
-					curClickItem = clickPosition;
-					float toRotaAngle = 0;
-					float sAngle = startAngle + (clickPosition > 0 ? itemFrame[clickPosition - 1] : 0) * ANGLE_NUM;
-					float tAngle = startAngle + itemFrame[clickPosition] * ANGLE_NUM;
-					// 当前点击的扇形的中心点的角度
-					float curItemCenterAngle = sAngle + (tAngle - sAngle) / 2;
-					toRotaAngle = startAngle + (90 - curItemCenterAngle);
-					rotaValues = PropertyValuesHolder.ofFloat("rotation", startAngle, toRotaAngle);
-					rotaValueAnimator.setDuration(Math.abs((int) (toRotaAngle - startAngle)) * 5);
-					rotaValueAnimator.setValues(rotaValues);
-					rotaValueAnimator.start();
 				}
 				if (null != l)
 					l.onItemClick(clickPosition);
@@ -229,7 +240,8 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 			cakeRect.set(0, 0, cakeSize, cakeSize);
 		// Log.v("ts", "onmeasure");
 		HIGHLIGHT_OFFSET = cakeSize * OFFSET_RATE;
-		PropertyValuesHolder topHolder = PropertyValuesHolder.ofFloat("top", 0, HIGHLIGHT_OFFSET);
+		PropertyValuesHolder topHolder = PropertyValuesHolder.ofFloat("top", 0,
+				HIGHLIGHT_OFFSET);
 		highLightValueAnimator.setValues(topHolder);
 	}
 
@@ -274,11 +286,12 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 				// } else {
 				value = cakes.get(i).value / sum * 100;
 				// }
-				cakeValues.add(new CakeValue(cakes.get(i).content, value, cakes.get(i).detail));
+				cakeValues.add(new CakeValue(cakes.get(i).content, value, cakes
+						.get(i).detail));
 			}
-//			logCakevalue();
+			// logCakevalue();
 			settleCakeValues(cakeValues.size() - 1);
-//			logCakevalue();
+			// logCakevalue();
 			// 初始化itemframe
 			itemFrame = new float[cakeValues.size()];
 			for (int i = 0; i < cakeValues.size(); i++) {
@@ -336,6 +349,7 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 
 	/**
 	 * 使用递归保证cakeValues的值的总和必为100
+	 * 
 	 * @param i
 	 */
 	private void settleCakeValues(int i) {
@@ -351,13 +365,13 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 		}
 	}
 
-
-
 	@Override
 	protected void onDraw(Canvas canvas) {
 		// super.onDraw(canvas);
-//		Log.v("ts", "ondraw");
-		if (drawCount == 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && isDrawByAnim) {
+		// Log.v("ts", "ondraw");
+		if (drawCount == 0
+				&& Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
+				&& isDrawByAnim) {
 			drawCakeByAnim();
 		}
 		drawCount = 1;
@@ -383,7 +397,9 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 		if (textGravity == Gravity.bottom) {
 			int totalLines = (int) (cakeValues.size() / 2f + 0.5f);
 			// 文字高度
-			int detailHeight = totalLines * dip2px(getContext(), TEXT_LINE_SPACE) + dip2px(getContext(), TOP_SPACING);
+			int detailHeight = totalLines
+					* dip2px(getContext(), TEXT_LINE_SPACE)
+					+ dip2px(getContext(), TOP_SPACING)+dip2px(getContext(), 3);
 			int diffSize = widthSpecSize - heightSpecSize;
 			// 如果宽>高,并且bottom;
 			if (diffSize > 0) {
@@ -418,7 +434,9 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 			if (diffSize > 0) {
 				measuredHeight = heightSpecSize;
 				if (widthSpecMode == MeasureSpec.AT_MOST) {
-					measuredWidth = measuredHeight + dip2px(getContext(), DEFAULT_DETAIL_WIDTH_FOR_GRAVITY_RIGHT);
+					measuredWidth = measuredHeight
+							+ dip2px(getContext(),
+									DEFAULT_DETAIL_WIDTH_FOR_GRAVITY_RIGHT);
 				} else if (widthSpecMode == MeasureSpec.EXACTLY) {
 					measuredWidth = widthSpecSize;
 				}
@@ -426,11 +444,15 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 			} else {
 				measuredWidth = widthSpecSize;
 				if (heightSpecMode == MeasureSpec.AT_MOST) {
-					measuredHeight = widthSpecSize - dip2px(getContext(), DEFAULT_DETAIL_WIDTH_FOR_GRAVITY_RIGHT);
+					measuredHeight = widthSpecSize
+							- dip2px(getContext(),
+									DEFAULT_DETAIL_WIDTH_FOR_GRAVITY_RIGHT);
 				} else if (heightSpecMode == MeasureSpec.EXACTLY) {
 					measuredHeight = heightSpecSize;
 				}
-				cakeSize = widthSpecSize - dip2px(getContext(), DEFAULT_DETAIL_WIDTH_FOR_GRAVITY_RIGHT);
+				cakeSize = widthSpecSize
+						- dip2px(getContext(),
+								DEFAULT_DETAIL_WIDTH_FOR_GRAVITY_RIGHT);
 			}
 		}
 
@@ -545,15 +567,18 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 				}
 				paint.setColor(ARC_COLORS[colorIndex]);
 				if (i == 0) {
-					canvas.drawArc(cakeRect, startAngle, cakeValues.get(i).value * ANGLE_NUM, true, paint);
+					canvas.drawArc(cakeRect, startAngle,
+							cakeValues.get(i).value * ANGLE_NUM, true, paint);
 					continue;
 				}
 				// 如果越界(超过100,即360度),就不画了
-				if (itemFrame[i - 1] >= 100 || cakeValues.get(i).value + itemFrame[i - 1] > 100) {
+				if (itemFrame[i - 1] >= 100
+						|| cakeValues.get(i).value + itemFrame[i - 1] > 100) {
 					break;
 				}
-				canvas.drawArc(cakeRect, startAngle + itemFrame[i - 1] * ANGLE_NUM,
-						cakeValues.get(i).value * ANGLE_NUM, true, paint);
+				canvas.drawArc(cakeRect, startAngle + itemFrame[i - 1]
+						* ANGLE_NUM, cakeValues.get(i).value * ANGLE_NUM, true,
+						paint);
 			}
 			drawCakeText(canvas);
 			holder.unlockCanvasAndPost(canvas);
@@ -565,10 +590,12 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 		Canvas canvas = null;
 
 		RectF itemRectf = new RectF();
-		itemRectf.set(cakeRect.left, top, cakeRect.right, top + cakeRect.bottom);
+		itemRectf
+				.set(cakeRect.left, top, cakeRect.right, top + cakeRect.bottom);
 		Rect lockRect = new Rect();
 		// itemRectf.round(lockRect);
-		lockRect.set((int) cakeRect.left, 0, (int) cakeRect.right, 40 + (int) cakeRect.bottom);
+		lockRect.set((int) cakeRect.left, 0, (int) cakeRect.right,
+				40 + (int) cakeRect.bottom);
 		canvas = holder.lockCanvas(lockRect);
 		if (null != canvas) {
 			// 清屏
@@ -589,25 +616,31 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 				}
 				paint.setColor(ARC_COLORS[colorIndex]);
 				if (i == 0) {
-					canvas.drawArc(drawRect, startAngle, cakeValues.get(i).value * ANGLE_NUM, true, paint);
+					canvas.drawArc(drawRect, startAngle,
+							cakeValues.get(i).value * ANGLE_NUM, true, paint);
 					if (i != item && top != 0) {
 						paint.setColor(FUZZY_COLOR);
 						paint.setAlpha((int) (top * 200 / HIGHLIGHT_OFFSET));
-						canvas.drawArc(drawRect, startAngle, cakeValues.get(i).value * ANGLE_NUM, true, paint);
+						canvas.drawArc(drawRect, startAngle,
+								cakeValues.get(i).value * ANGLE_NUM, true,
+								paint);
 					}
 					continue;
 				}
 				// 如果越界(超过100,即360度),就不画了
-				if (itemFrame[i - 1] >= 100 || cakeValues.get(i).value + itemFrame[i - 1] > 100) {
+				if (itemFrame[i - 1] >= 100
+						|| cakeValues.get(i).value + itemFrame[i - 1] > 100) {
 					break;
 				}
-				canvas.drawArc(drawRect, startAngle + itemFrame[i - 1] * ANGLE_NUM,
-						cakeValues.get(i).value * ANGLE_NUM, true, paint);
+				canvas.drawArc(drawRect, startAngle + itemFrame[i - 1]
+						* ANGLE_NUM, cakeValues.get(i).value * ANGLE_NUM, true,
+						paint);
 				if (i != item && top != 0) {
 					paint.setColor(FUZZY_COLOR);
 					paint.setAlpha((int) (top * 200 / HIGHLIGHT_OFFSET));
-					canvas.drawArc(drawRect, startAngle + itemFrame[i - 1] * ANGLE_NUM, cakeValues.get(i).value
-							* ANGLE_NUM, true, paint);
+					canvas.drawArc(drawRect, startAngle + itemFrame[i - 1]
+							* ANGLE_NUM, cakeValues.get(i).value * ANGLE_NUM,
+							true, paint);
 				}
 			}
 			if (top != 0)
@@ -638,8 +671,8 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 			return;
 		Canvas canvas = null;
 		Rect itemRect = new Rect();
-		itemRect.set(detailRect.left, detailRect.top + (int) HIGHLIGHT_OFFSET, detailRect.right, (int) HIGHLIGHT_OFFSET
-				+ detailRect.bottom);
+		itemRect.set(detailRect.left, detailRect.top + (int) HIGHLIGHT_OFFSET,
+				detailRect.right, (int) HIGHLIGHT_OFFSET + detailRect.bottom);
 		canvas = holder.lockCanvas(itemRect);
 		if (null != canvas) {
 			// 清屏
@@ -653,9 +686,12 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 			TextPaint textPaint = new TextPaint(paint);
 			textPaint.setColor(0xff000000);
 
-			StaticLayout layout = new StaticLayout(txt, textPaint, itemRect.right - itemRect.left,
-					Alignment.ALIGN_NORMAL, 1f, 0f, true);
-			canvas.translate(itemRect.left + dip2px(getContext(), LEFT_SPACING), itemRect.top);
+			StaticLayout layout = new StaticLayout(txt, textPaint,
+					itemRect.right - itemRect.left, Alignment.ALIGN_NORMAL, 1f,
+					0f, true);
+			canvas.translate(
+					itemRect.left + dip2px(getContext(), LEFT_SPACING),
+					itemRect.top);
 			layout.draw(canvas);
 			holder.unlockCanvasAndPost(canvas);
 		}
@@ -698,25 +734,31 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 				}
 				paint.setColor(ARC_COLORS[colorIndex]);
 				// 如果越界(超过100,即360度),就不画了
-				if (i > 0 && (itemFrame[i - 1] > 100 || cakeValues.get(i).value + itemFrame[i - 1] > 100)) {
+				if (i > 0
+						&& (itemFrame[i - 1] > 100 || cakeValues.get(i).value
+								+ itemFrame[i - 1] > 100)) {
 					break;
 				}
 				int textX, textY;
 				int rectX, rectY;
 				if (textGravity == Gravity.right) {
 					rectX = left;
-					rectY = top + i * textLineSpace + textLineSpace - dip2px(getContext(), TEXT_SIZE);
+					rectY = top + i * textLineSpace + textLineSpace
+							- dip2px(getContext(), TEXT_SIZE);
 					textY = top + (i + 1) * textLineSpace;
 				} else {
 					rectX = left + (i % 2) * (detailWidth / 2);
-					rectY = top + (i / 2) * textLineSpace + textLineSpace - dip2px(getContext(), TEXT_SIZE);
+					rectY = top + (i / 2) * textLineSpace + textLineSpace
+							- dip2px(getContext(), TEXT_SIZE);
 					textY = top + (i / 2 + 1) * textLineSpace;
 				}
 				textX = rectX + colorRectWidth + dip2px(getContext(), 3);
-				colorRect.set(rectX, rectY, rectX + colorRectWidth, rectY + colorRectWidth);
+				colorRect.set(rectX, rectY, rectX + colorRectWidth, rectY
+						+ colorRectWidth);
 				canvas.drawRect(colorRect, paint);
 				paint.setColor(0xff000000);
-				canvas.drawText(cakeValues.get(i).content + ":" + (int) counts[i], textX, textY, paint);
+				canvas.drawText(cakeValues.get(i).content + ":"
+						+ (int) counts[i], textX, textY, paint);
 			}
 			holder.unlockCanvasAndPost(canvas);
 		}
@@ -753,9 +795,10 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 				if (tAngle * ANGLE_NUM - sAngle * ANGLE_NUM < 30) {
 					continue;
 				}
-				float[] position = getArcCenterPosition(startAngle + sAngle * ANGLE_NUM, startAngle + tAngle
-						* ANGLE_NUM);
-				canvas.drawText((int) counts[i] + "笔", position[0], position[1], paint);
+				float[] position = getArcCenterPosition(startAngle + sAngle
+						* ANGLE_NUM, startAngle + tAngle * ANGLE_NUM);
+				canvas.drawText((int) counts[i] + "笔", position[0],
+						position[1], paint);
 			}
 			// holder.unlockCanvasAndPost(canvas);
 		}
@@ -792,8 +835,10 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 			// if (tAngle * ANGLE_NUM - sAngle * ANGLE_NUM < 30) {
 			// continue;
 			// }
-			float[] position = getArcCenterPosition(startAngle + sAngle * ANGLE_NUM, startAngle + tAngle * ANGLE_NUM);
-			canvas.drawText((int) counts[item] + "笔", position[0], position[1], paint);
+			float[] position = getArcCenterPosition(startAngle + sAngle
+					* ANGLE_NUM, startAngle + tAngle * ANGLE_NUM);
+			canvas.drawText((int) counts[item] + "笔", position[0], position[1],
+					paint);
 			// holder.unlockCanvasAndPost(canvas);
 		}
 		paint.setTextSize(dip2px(getContext(), TEXT_SIZE));
@@ -817,11 +862,13 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 				}
 				paint.setColor(ARC_COLORS[colorIndex]);
 				if (i == 0) {
-					canvas.drawArc(cakeRect, startAngle, cakeValues.get(i).value * ANGLE_NUM, true, paint);
+					canvas.drawArc(cakeRect, startAngle,
+							cakeValues.get(i).value * ANGLE_NUM, true, paint);
 					// holder.unlockCanvasAndPost(canvas);
 					continue;
 				}
-				canvas.drawArc(cakeRect, itemFrame[i - 1] * ANGLE_NUM, cakeValues.get(i).value * ANGLE_NUM, true, paint);
+				canvas.drawArc(cakeRect, itemFrame[i - 1] * ANGLE_NUM,
+						cakeValues.get(i).value * ANGLE_NUM, true, paint);
 			}
 			curItem = getCurItem(curAngle);
 			int colorIndex = curItem % ARC_COLORS.length;
@@ -939,7 +986,8 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 							break;
 						}
 					} else {
-						if ((clickAngle >= aAngle && clickAngle < 360) || (clickAngle >= 0 && clickAngle <= bAngle)) {
+						if ((clickAngle >= aAngle && clickAngle < 360)
+								|| (clickAngle >= 0 && clickAngle <= bAngle)) {
 							clickPosition = i;
 							break;
 						}
@@ -956,7 +1004,8 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 						break;
 					}
 				} else {
-					if ((clickAngle >= aAngle && clickAngle < 360) || (clickAngle >= 0 && clickAngle <= bAngle)) {
+					if ((clickAngle >= aAngle && clickAngle < 360)
+							|| (clickAngle >= 0 && clickAngle <= bAngle)) {
 						clickPosition = i;
 						break;
 					}
@@ -985,9 +1034,11 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
-//		Log.v("ts", "surface create");
+		// Log.v("ts", "surface create");
 		// 只有刚开始打开的时候播放,防止重播闪烁,当点击home键返回时,直接绘制.
-		if (drawCount == 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && isDrawByAnim) {
+		if (drawCount == 0
+				&& Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
+				&& isDrawByAnim) {
 			// 因为在surfaceCreated完成之后,还没有onMeasure完成,所以这里的播放动画
 			// 移到ondraw完成后哪里了
 			// drawCakeByAnim();
@@ -1002,13 +1053,14 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 
 	// 在surface的大小发生改变时触发
 	@Override
-	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-//		Log.v("ts", "surface change:" + width + "," + height);
+	public void surfaceChanged(SurfaceHolder holder, int format, int width,
+			int height) {
+		// Log.v("ts", "surface change:" + width + "," + height);
 	}
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
-//		Log.v("ts", "destory");
+		// Log.v("ts", "destory");
 		cakeValueAnimator.cancel();
 		rotaValueAnimator.cancel();
 		highLightValueAnimator.cancel();
@@ -1018,7 +1070,8 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 
 	private void initValueAnimator() {
 
-		PropertyValuesHolder angleValues = PropertyValuesHolder.ofFloat("angle", 0f, 360f);
+		PropertyValuesHolder angleValues = PropertyValuesHolder.ofFloat(
+				"angle", 0f, 360f);
 		cakeValueAnimator = ValueAnimator.ofPropertyValuesHolder(angleValues);
 		cakeValueAnimator.addUpdateListener(new AnimatorUpdateListener() {
 
@@ -1053,8 +1106,10 @@ public class CakeSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 		rotaValueAnimator.setRepeatMode(ValueAnimator.RESTART);
 		rotaValueAnimator.setInterpolator(new OvershootInterpolator());
 
-		PropertyValuesHolder topValuesHolder = PropertyValuesHolder.ofFloat("top", 0, HIGHLIGHT_OFFSET);
-		highLightValueAnimator = ValueAnimator.ofPropertyValuesHolder(topValuesHolder);
+		PropertyValuesHolder topValuesHolder = PropertyValuesHolder.ofFloat(
+				"top", 0, HIGHLIGHT_OFFSET);
+		highLightValueAnimator = ValueAnimator
+				.ofPropertyValuesHolder(topValuesHolder);
 		highLightValueAnimator.addUpdateListener(new AnimatorUpdateListener() {
 
 			@Override
