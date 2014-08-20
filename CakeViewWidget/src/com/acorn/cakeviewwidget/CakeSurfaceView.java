@@ -3,6 +3,8 @@ package com.acorn.cakeviewwidget;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.animation.Animator;
+import android.animation.Animator.AnimatorListener;
 import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
 import android.animation.ValueAnimator.AnimatorUpdateListener;
@@ -20,10 +22,10 @@ import android.text.Layout.Alignment;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 import android.view.ViewTreeObserver.OnPreDrawListener;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
@@ -105,6 +107,11 @@ public class CakeSurfaceView extends SurfaceView implements
 	private int LEFT_SPACING = 3;
 	private int TOP_SPACING = 5;
 
+	private String unitName = "笔";
+	private boolean isShowDecimals = true;
+	/** 饼图信息排列方式 */
+	private RankType rankType = RankType.RANK_BY_ROW;
+
 	public CakeSurfaceView(Context context) {
 		super(context);
 		init();
@@ -126,7 +133,7 @@ public class CakeSurfaceView extends SurfaceView implements
 		holder.setFormat(PixelFormat.TRANSPARENT);
 		setZOrderOnTop(true);
 		this.setFocusable(true);
-		this.setBackgroundColor(Color.parseColor("#00000000"));
+		this.setBackgroundColor(Color.parseColor("#00ffffff"));
 		initValueAnimator();
 
 		paint = new Paint();
@@ -186,7 +193,7 @@ public class CakeSurfaceView extends SurfaceView implements
 				int clickPosition = getClickPosition();
 				if (clickPosition == -1)
 					break;
-				if (cakeValues.get(clickPosition).value != 100f) { //如果只有一个的情况下,就不高亮
+				if (cakeValues.get(clickPosition).value != 100f) { // 如果只有一个的情况下,就不高亮
 					if (!rotaValueAnimator.isRunning()
 							&& !cakeValueAnimator.isRunning()
 							&& !highLightValueAnimator.isRunning()
@@ -331,6 +338,35 @@ public class CakeSurfaceView extends SurfaceView implements
 		this.TOP_SPACING = topSpacing;
 	}
 
+	public boolean isShowDecimals() {
+		return isShowDecimals;
+	}
+
+	/**
+	 * 是否显示小数
+	 * 
+	 * @param isShowDecimals
+	 */
+	public void setShowDecimals(boolean isShowDecimals) {
+		this.isShowDecimals = isShowDecimals;
+	}
+
+	/**
+	 * 设置饼图信息排列方式
+	 * 
+	 * @param rankType
+	 */
+	public void setRankType(RankType rankType) {
+		this.rankType = rankType;
+	}
+
+	public enum RankType {
+		/** 按行排列,每2个换行 */
+		RANK_BY_ROW,
+		/** 按1列排序 */
+		RANK_BY_COLUMN
+	}
+
 	private float getSum(List<CakeValue> mCakes) {
 		float sum = 0;
 		for (int i = 0; i < mCakes.size(); i++) {
@@ -395,11 +431,13 @@ public class CakeSurfaceView extends SurfaceView implements
 		float cakeSize;
 		// wrap_content的情况触发,这种情况下specSize就是最大能到的尺寸
 		if (textGravity == Gravity.bottom) {
-			int totalLines = (int) (cakeValues.size() / 2f + 0.5f);
+			int totalLines = (int) (cakeValues.size()
+					/ (rankType == RankType.RANK_BY_ROW ? 2f : 1f) + 0.5f);
 			// 文字高度
 			int detailHeight = totalLines
 					* dip2px(getContext(), TEXT_LINE_SPACE)
-					+ dip2px(getContext(), TOP_SPACING)+dip2px(getContext(), 3);
+					+ dip2px(getContext(), TOP_SPACING)
+					+ dip2px(getContext(), 3);
 			int diffSize = widthSpecSize - heightSpecSize;
 			// 如果宽>高,并且bottom;
 			if (diffSize > 0) {
@@ -747,18 +785,25 @@ public class CakeSurfaceView extends SurfaceView implements
 							- dip2px(getContext(), TEXT_SIZE);
 					textY = top + (i + 1) * textLineSpace;
 				} else {
-					rectX = left + (i % 2) * (detailWidth / 2);
-					rectY = top + (i / 2) * textLineSpace + textLineSpace
+					int column = rankType == RankType.RANK_BY_ROW ? 2 : 1;
+					rectX = left + (i % column) * (detailWidth / 2);
+					rectY = top + (i / column) * textLineSpace + textLineSpace
 							- dip2px(getContext(), TEXT_SIZE);
-					textY = top + (i / 2 + 1) * textLineSpace;
+					textY = top + (i / column + 1) * textLineSpace;
 				}
 				textX = rectX + colorRectWidth + dip2px(getContext(), 3);
 				colorRect.set(rectX, rectY, rectX + colorRectWidth, rectY
 						+ colorRectWidth);
 				canvas.drawRect(colorRect, paint);
 				paint.setColor(0xff000000);
-				canvas.drawText(cakeValues.get(i).content + ":"
-						+ (int) counts[i], textX, textY, paint);
+				String drawTxt = "";
+				if (isShowDecimals()) {
+					drawTxt = counts[i] + unitName;
+				} else {
+					drawTxt = (int) counts[i] + unitName;
+				}
+				canvas.drawText(cakeValues.get(i).content + ":" + drawTxt,
+						textX, textY, paint);
 			}
 			holder.unlockCanvasAndPost(canvas);
 		}
@@ -797,8 +842,13 @@ public class CakeSurfaceView extends SurfaceView implements
 				}
 				float[] position = getArcCenterPosition(startAngle + sAngle
 						* ANGLE_NUM, startAngle + tAngle * ANGLE_NUM);
-				canvas.drawText((int) counts[i] + "笔", position[0],
-						position[1], paint);
+				String drawTxt = "";
+				if (isShowDecimals()) {
+					drawTxt = counts[i] + unitName;
+				} else {
+					drawTxt = (int) counts[i] + unitName;
+				}
+				canvas.drawText(drawTxt, position[0], position[1], paint);
 			}
 			// holder.unlockCanvasAndPost(canvas);
 		}
@@ -837,8 +887,13 @@ public class CakeSurfaceView extends SurfaceView implements
 			// }
 			float[] position = getArcCenterPosition(startAngle + sAngle
 					* ANGLE_NUM, startAngle + tAngle * ANGLE_NUM);
-			canvas.drawText((int) counts[item] + "笔", position[0], position[1],
-					paint);
+			String drawTxt = "";
+			if (isShowDecimals()) {
+				drawTxt = counts[item] + unitName;
+			} else {
+				drawTxt = (int) counts[item] + unitName;
+			}
+			canvas.drawText(drawTxt, position[0], position[1], paint);
 			// holder.unlockCanvasAndPost(canvas);
 		}
 		paint.setTextSize(dip2px(getContext(), TEXT_SIZE));
@@ -1044,6 +1099,7 @@ public class CakeSurfaceView extends SurfaceView implements
 			// drawCakeByAnim();
 			// Log.v("ts", "byanim");
 		} else {
+			Log.v("ts", "画饼图");
 			drawCake();
 			drawDetail();
 			// Log.v("ts", "zhijie");
@@ -1121,6 +1177,8 @@ public class CakeSurfaceView extends SurfaceView implements
 		highLightValueAnimator.setDuration(700);
 		highLightValueAnimator.setRepeatCount(0);
 		highLightValueAnimator.setRepeatMode(ValueAnimator.REVERSE);
+		
+		
 
 	}
 
@@ -1157,5 +1215,9 @@ public class CakeSurfaceView extends SurfaceView implements
 			this.value = value;
 			this.detail = detail;
 		}
+	}
+
+	public void setUnitName(String string) {
+		this.unitName = string;
 	}
 }
