@@ -8,7 +8,7 @@ cakeview
 ![github](https://github.com/oneAcorn/cakeview/blob/master/cake2.png)
 
 <h3>详细说明参见:</h3>
-http://www.eoeandroid.com/thread-540249-2-1.html
+http://www.eoeandroid.com/thread-540249-1-1.html
 
 <h3>使用方法</h3>
 
