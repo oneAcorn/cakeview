@@ -21,14 +21,17 @@ import android.os.Build;
 import android.text.Layout.Alignment;
 import android.text.StaticLayout;
 import android.text.TextPaint;
+import android.text.method.MovementMethod;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.VelocityTracker;
 import android.view.ViewTreeObserver.OnPreDrawListener;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
+import android.widget.Toast;
 
 /**
  * 饼图
@@ -112,6 +115,21 @@ public class CakeSurfaceView extends SurfaceView implements
 	/** 饼图信息排列方式 */
 	private RankType rankType = RankType.RANK_BY_ROW;
 
+	/** 是不是在拖动旋转中 */
+	private boolean isDraggingRotation;
+	/** 是不是手指拖动中出了饼图的范围 */
+	private boolean isDraggedOutOfBounds = false;
+	/** 触发拖动的最小手指按下时间 */
+	private long minDragTimeMillis = 300;
+	private long startDownTime;
+	/** 记录拖动前的角度 */
+	private float startAngelBeforeDragged = 0;
+	/** 滑动动画 */
+	private ValueAnimator swipValueAnimator;
+	private PropertyValuesHolder swipValues;
+	/** 速度跟踪器 */
+	private VelocityTracker mVelocityTracker;
+
 	public CakeSurfaceView(Context context) {
 		super(context);
 		init();
@@ -179,12 +197,44 @@ public class CakeSurfaceView extends SurfaceView implements
 		case MotionEvent.ACTION_DOWN:
 			firstDownX = event.getX();
 			firstDownY = event.getY();
+			startDownTime = System.currentTimeMillis();
+			/**
+			 * 速度跟踪. 获取一个VelocityTracker对象, 用完后记得回收
+			 * 回收后代表你不需要使用了，系统将此对象在此分配到其他请求者
+			 */
+			mVelocityTracker = VelocityTracker.obtain();
+			mVelocityTracker.addMovement(event);
 			break;
 		case MotionEvent.ACTION_MOVE:
 			lastDownX = event.getX();
 			lastDownY = event.getY();
+			mVelocityTracker.addMovement(event);
+
+			float deltaAngle = getAngleByPosition(lastDownX, lastDownY)
+					- getAngleByPosition(firstDownX, firstDownY);
+			if (isDraggedOutOfBounds || isDraggingRotation
+					&& isOutOfCakeBounds(lastDownX, lastDownY)) { // 拖动中超饼图范围了
+				// startAngelBeforeDragged=0;
+				isDraggedOutOfBounds = true;
+				break;
+			}
+			if ((isDraggingRotation || (Math.abs(deltaAngle) > 10 && System
+					.currentTimeMillis() - startDownTime > minDragTimeMillis))
+					&& !isHighLigntMode
+					&& !isOutOfCakeBounds(lastDownX, lastDownY)) { // 拖动动画
+				// Log.i("ts", "deltaAngle:" + deltaAngle);
+				if (startAngelBeforeDragged == 0) {
+					startAngelBeforeDragged = startAngle;
+					Toast.makeText(getContext(), "拖~动~模~式~已~启~动~", 0).show();
+					isDraggingRotation = true;
+				}
+				startAngle = deltaAngle + startAngelBeforeDragged;
+				drawCake();
+			}
+
 			break;
 		case MotionEvent.ACTION_UP:
+			/** 处理itemclick */
 			float deltaX = Math.abs(lastDownX - firstDownX);
 			float deltaY = Math.abs(lastDownY - firstDownY);
 			// Log.v("ts", "变化的xy:" + deltaX + "," + deltaY);
@@ -197,6 +247,7 @@ public class CakeSurfaceView extends SurfaceView implements
 					if (!rotaValueAnimator.isRunning()
 							&& !cakeValueAnimator.isRunning()
 							&& !highLightValueAnimator.isRunning()
+							&& !swipValueAnimator.isRunning()
 							&& textGravity == Gravity.bottom) {
 						if (isHighLigntMode) {
 							isHighLigntMode = false;
@@ -227,12 +278,103 @@ public class CakeSurfaceView extends SurfaceView implements
 				}
 				if (null != l)
 					l.onItemClick(clickPosition);
-				// l.OnItemClick(mPager.getCurrentItem() %
-				// imgUris.length);
+
 			}
+			/** end */
+			/** 处理滑动 */
+			else if (!isDraggingRotation) {
+				mVelocityTracker.addMovement(event);
+				/**
+				 * 计算当前速度, 其中units是单位表示， 1代表px/毫秒, 1000代表px/秒, ..
+				 * maxVelocity此次计算速度你想要的最大值
+				 */
+				mVelocityTracker.computeCurrentVelocity(1000);
+				/**
+				 * 经过一次computeCurrentVelocity后你就可以用一下几个方法获取此次计算的值 //id是touch
+				 * event触摸点的ID, 来为多点触控标识，有这个标识在计算时可以忽略 //其他触点干扰，当然干扰肯定是有的 public
+				 * float getXVelocity(); public float getYVelocity(); public
+				 * float getXVelocity(int id); public float getYVelocity(int
+				 * id);
+				 */
+				float velocityX = mVelocityTracker.getXVelocity();
+				float velocityY = mVelocityTracker.getYVelocity();
+				/** x,y轴的移动距离 */
+				float moveX = event.getX() - firstDownX;
+				float moveY = event.getY() - firstDownY;
+				// float absVelocityX = Math.abs(velocityX);
+				// float absVelocityY =
+				// Math.abs(mVelocityTracker.getYVelocity());
+				Log.i("ts", "x轴速度:" + velocityX + ",y轴速度:" + velocityY
+						+ "\n移动距离X:" + moveX + ",移动距离Y:" + moveY);
+				dealSwip(velocityX, velocityY, moveX, moveY, firstDownX,
+						firstDownY);
+			}
+			resetStatus();
+			/** end */
+			break;
+		case MotionEvent.ACTION_CANCEL:
+			resetStatus();
 			break;
 		}
 		return true;
+	}
+
+	private void dealSwip(float velocityX, float velocityY, float moveX,
+			float moveY, float firstDownX, float firstDownY) {
+		if (swipValueAnimator.isRunning()||isHighLigntMode)
+			return;
+		// 圆心
+		float circleX = cakeRect.left + ((cakeRect.right - cakeRect.left) / 2f);
+		float circleY = cakeRect.top + ((cakeRect.bottom - cakeRect.top) / 2f);
+		float absVelocityX = Math.abs(velocityX);
+		float absVelocityY = Math.abs(velocityY);
+		float absMoveX = Math.abs(moveX);
+		float absMoveY = Math.abs(moveY);
+		// Log.i("ts",
+		// "圆心:("+circleX+","+circleY+"),初始点:("+firstDownX+","+firstDownY+")");
+		// 总速度
+		float velocitySum = absVelocityX + absVelocityY;
+		// true on 顺时针(用速度)
+		boolean direction;
+		if (absMoveX > absMoveY) {
+			if (firstDownY > circleY) { // 饼图下侧
+				// Log.i("ts", "饼图下侧");
+				direction = moveX <= 0;
+			} else
+				direction = moveX > 0;
+		} else {
+			if (firstDownX > circleX) { // 饼图右侧
+				direction = moveY >= 0;
+				// Log.i("ts", "饼图右侧");
+			} else
+				direction = moveY < 0;
+		}
+
+		// Log.i("ts", direction ? "顺时针" : "逆时针");
+		float toSwipAngle = (absMoveX + absMoveY) / 30
+				+ (absVelocityX + absVelocityY) / 50;
+		if (direction)
+			toSwipAngle = toSwipAngle + startAngle;
+		else
+			toSwipAngle = startAngle - toSwipAngle;
+		swipValues = PropertyValuesHolder.ofFloat("swip", startAngle,
+				toSwipAngle);
+		swipValueAnimator.setDuration((long) (Math.abs(toSwipAngle) * 3));
+		swipValueAnimator.setValues(swipValues);
+		swipValueAnimator.start();
+	}
+
+	/**
+	 * 重置各种东西
+	 */
+	private void resetStatus() {
+		// 回收
+		if (null != mVelocityTracker)
+			mVelocityTracker.recycle();
+		mVelocityTracker = null;
+		startAngelBeforeDragged = 0;
+		isDraggingRotation = false;
+		isDraggedOutOfBounds = false;
 	}
 
 	private void initRect(float cakeSize) {
@@ -977,11 +1119,37 @@ public class CakeSurfaceView extends SurfaceView implements
 	}
 
 	/**
+	 * 点(x1,y1)是否超出饼图的范围
+	 * 
+	 * @param x1
+	 * @param y1
+	 * @return true if out of bounds
+	 */
+	private boolean isOutOfCakeBounds(float x1, float y1) {
+		// 圆心
+		float x = cakeRect.left + ((cakeRect.right - cakeRect.left) / 2f);
+		float y = cakeRect.top + ((cakeRect.bottom - cakeRect.top) / 2f);
+		// 半径
+		float r = (cakeRect.right - cakeRect.left) / 2f;
+		// 对边长
+		float dBian = y1 - y;
+		// 邻边
+		float lBian = x1 - x;
+		// 超出饼图范围
+		if (Math.abs(dBian) > r || Math.abs(lBian) > r) {
+			Log.i("ts", "超范围了");
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
 	 * 根据坐标计算点相对圆心的角度
 	 * 
 	 * @param x1
 	 * @param y1
-	 * @return 角度
+	 * @return 角度,当点击的位置超出了圆的范围也能正常运行
 	 */
 	private float getAngleByPosition(float x1, float y1) {
 		// 圆心
@@ -1119,6 +1287,7 @@ public class CakeSurfaceView extends SurfaceView implements
 		// Log.v("ts", "destory");
 		cakeValueAnimator.cancel();
 		rotaValueAnimator.cancel();
+		swipValueAnimator.cancel();
 		highLightValueAnimator.cancel();
 		isHighLigntMode = false;
 		startAngle = 0;
@@ -1177,9 +1346,19 @@ public class CakeSurfaceView extends SurfaceView implements
 		highLightValueAnimator.setDuration(700);
 		highLightValueAnimator.setRepeatCount(0);
 		highLightValueAnimator.setRepeatMode(ValueAnimator.REVERSE);
-		
-		
 
+		swipValues = PropertyValuesHolder.ofFloat("swip", 0, 90);
+		swipValueAnimator = ValueAnimator.ofPropertyValuesHolder(swipValues);
+		swipValueAnimator.addUpdateListener(new AnimatorUpdateListener() {
+
+			@Override
+			public void onAnimationUpdate(ValueAnimator animation) {
+				float rota = obj2Float(animation.getAnimatedValue("swip"));
+				startAngle = rota;
+				drawCake();
+			}
+		});
+		swipValueAnimator.setInterpolator(new DecelerateInterpolator());
 	}
 
 	private float obj2Float(Object o) {
