@@ -1,5 +1,6 @@
 cakeview
 ========
+<a href="https://996.icu"><img src="https://img.shields.io/badge/link-996.icu-red.svg" alt="996.icu" /></a>
 
 <h3>带动画的饼图</h3>
 
