@@ -35,7 +35,12 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "没点到", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Toast.makeText(MainActivity.this, sectorDrawable.getPieEntry().getTitle(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, sectorDrawable.getPieEntry().getTitle() + "," + sectorDrawable.isHighlighting(), Toast.LENGTH_SHORT).show();
+                if (sectorDrawable.isHighlighting()) {
+                    sectorDrawable.unPress();
+                } else {
+                    sectorDrawable.press();
+                }
             }
         });
     }

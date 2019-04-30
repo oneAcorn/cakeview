@@ -152,6 +152,7 @@ public class PieView extends View {
             SectorDrawable sectorDrawable = new SectorDrawable();
             sectorDrawable.setPieEntry(pieEntry);
             mSectorDrawables.add(sectorDrawable);
+            sectorDrawable.setCallback(this);
         }
     }
 
@@ -184,7 +185,16 @@ public class PieView extends View {
 
     @Override
     protected boolean verifyDrawable(Drawable who) {
-        return who instanceof SectorDrawable || super.verifyDrawable(who);
+        boolean res = false;
+        if (null != mSectorDrawables && !mSectorDrawables.isEmpty()) {
+            for (SectorDrawable sectorDrawable : mSectorDrawables) {
+                if (who == sectorDrawable) {
+                    res = true;
+                    break;
+                }
+            }
+        }
+        return res || super.verifyDrawable(who);
     }
 
     public void setOnPieViewItemClickListener(OnPieViewItemClickListener onPieViewItemClickListener) {
