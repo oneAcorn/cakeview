@@ -2,9 +2,7 @@ package com.acorn.library;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.support.v4.view.MotionEventCompat;
@@ -34,11 +32,30 @@ public class PieView extends View {
     private static final int MAX_SINGLE_CLICK_TIME = 50;// 单击最长等待时间
     private int downX, downY;
 
+    //是否点击高亮
+    private boolean isHighlightEnable = true;
+    private boolean isAutoUnpressOther = false;
+
     private Runnable mSingleClickRunnable = new Runnable() {
         @Override
         public void run() {
+            SectorDrawable clickSectorDrawable = getTouchSectorDrawable(downX, downY);
             if (null != mOnPieViewItemClickListener) {
-                mOnPieViewItemClickListener.onPieClick(getClickDrawable(), 0);
+                mOnPieViewItemClickListener.onPieClick(clickSectorDrawable, 0);
+            }
+            if (isHighlightEnable && null != clickSectorDrawable) {
+                if (clickSectorDrawable.isHighlighting()) {
+                    clickSectorDrawable.unPress();
+                } else {
+                    clickSectorDrawable.press();
+                    if (isAutoUnpressOther) {
+                        for (SectorDrawable sectorDrawable : mSectorDrawables) {
+                            if (sectorDrawable.equals(clickSectorDrawable))
+                                continue;
+                            sectorDrawable.unPress();
+                        }
+                    }
+                }
             }
         }
     };
@@ -76,7 +93,7 @@ public class PieView extends View {
             case MotionEvent.ACTION_DOWN:
                 downX = (int) event.getX();
                 downY = (int) event.getY();
-                if (mSingleClickRunnable != null) {
+                if (mSingleClickRunnable != null) { //移除单击runnable
                     mHandler.removeCallbacks(mSingleClickRunnable);
                 }
                 break;
@@ -90,7 +107,7 @@ public class PieView extends View {
             case MotionEvent.ACTION_UP:
                 int upX = (int) event.getX();
                 int upY = (int) event.getY();
-                if (Math.abs(upX - downX) <= minTouchSlop && Math.abs(upY - downY) <= minTouchSlop) {
+                if (Math.abs(upX - downX) <= minTouchSlop && Math.abs(upY - downY) <= minTouchSlop) { //单击
                     mHandler.postDelayed(mSingleClickRunnable, MAX_SINGLE_CLICK_TIME);
                 }
                 break;
@@ -156,14 +173,12 @@ public class PieView extends View {
         }
     }
 
-    private SectorDrawable getClickDrawable() {
+    private SectorDrawable getTouchSectorDrawable(int x, int y) {
         if (null == mSectorDrawables || mSectorDrawables.isEmpty())
             return null;
-        int clickX = downX;
-        int clickY = downY;
         SectorDrawable clickDrawable = null;
         for (SectorDrawable sectorDrawable : mSectorDrawables) {
-            if (sectorDrawable.containAngle(clickX, clickY)) {
+            if (sectorDrawable.containAngle(x, y)) {
                 clickDrawable = sectorDrawable;
                 break;
             }
@@ -183,18 +198,25 @@ public class PieView extends View {
         }
     }
 
+    public boolean isHighlightEnable() {
+        return isHighlightEnable;
+    }
+
+    public void setHighlightEnable(boolean highlightEnable) {
+        isHighlightEnable = highlightEnable;
+    }
+
+    public boolean isAutoUnpressOther() {
+        return isAutoUnpressOther;
+    }
+
+    public void setAutoUnpressOther(boolean autoUnpressOther) {
+        isAutoUnpressOther = autoUnpressOther;
+    }
+
     @Override
     protected boolean verifyDrawable(Drawable who) {
-        boolean res = false;
-        if (null != mSectorDrawables && !mSectorDrawables.isEmpty()) {
-            for (SectorDrawable sectorDrawable : mSectorDrawables) {
-                if (who == sectorDrawable) {
-                    res = true;
-                    break;
-                }
-            }
-        }
-        return res || super.verifyDrawable(who);
+        return who instanceof SectorDrawable || super.verifyDrawable(who);
     }
 
     public void setOnPieViewItemClickListener(OnPieViewItemClickListener onPieViewItemClickListener) {

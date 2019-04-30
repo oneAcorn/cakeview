@@ -1,5 +1,6 @@
 package com.acorn.library;
 
+import android.animation.Animator;
 import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
 import android.graphics.Canvas;
@@ -54,6 +55,8 @@ public class SectorDrawable extends Drawable {
     }
 
     public void press() {
+        if (isHighlighting)
+            return;
         if (null == pressAnim)
             initPressAnim();
         if (!pressAnim.isStarted())
@@ -61,6 +64,8 @@ public class SectorDrawable extends Drawable {
     }
 
     public void unPress() {
+        if (!isHighlighting)
+            return;
         if (null == pressAnim)
             initPressAnim();
         if (pressAnim.isRunning())
@@ -69,9 +74,10 @@ public class SectorDrawable extends Drawable {
     }
 
     public boolean isHighlighting() {
-        if (null != pressAnim && pressAnim.isRunning())
-            return false;
-        return cx != originCx && cy != originCy;
+//        if (null != pressAnim && pressAnim.isRunning())
+//            return true;
+//        return cx != originCx && cy != originCy;
+        return isHighlighting;
     }
 
     private void initPressAnim() {
@@ -94,6 +100,27 @@ public class SectorDrawable extends Drawable {
         pressAnim.setInterpolator(new AccelerateInterpolator());
         pressAnim.addUpdateListener(listener);
         pressAnim.setDuration(300);
+        pressAnim.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                isHighlighting = cx == originCx && cy == originCy;
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
     }
 
     public void setPieEntry(PieEntry pieEntry) {

@@ -28,6 +28,8 @@ public class MainActivity extends AppCompatActivity {
         btn = findViewById(R.id.btn);
 
         mPieView.setPieEntries(getTestData2());
+        mPieView.setHighlightEnable(true);
+        mPieView.setAutoUnpressOther(true);
         mPieView.setOnPieViewItemClickListener(new OnPieViewItemClickListener() {
             @Override
             public void onPieClick(SectorDrawable sectorDrawable, int position) {
@@ -36,11 +38,11 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 Toast.makeText(MainActivity.this, sectorDrawable.getPieEntry().getTitle() + "," + sectorDrawable.isHighlighting(), Toast.LENGTH_SHORT).show();
-                if (sectorDrawable.isHighlighting()) {
-                    sectorDrawable.unPress();
-                } else {
-                    sectorDrawable.press();
-                }
+//                if (sectorDrawable.isHighlighting()) {
+//                    sectorDrawable.unPress();
+//                } else {
+//                    sectorDrawable.press();
+//                }
             }
         });
     }
