@@ -1,4 +1,4 @@
-package com.acorn.library;
+package com.acorn.library.entry;
 
 public class PieEntry {
     //此饼图项占比0~1
@@ -9,6 +9,7 @@ public class PieEntry {
     private int textSize;
     private float startAngle;
     private float sweepAngle;
+    private boolean isDefaultPie;
 
     public PieEntry(float value, String title) {
         this.value = value;
@@ -21,7 +22,7 @@ public class PieEntry {
         this.textSize = textSize;
     }
 
-    public PieEntry(float value, int color, String title, int textSize) {
+    public PieEntry(float value, String title, int textSize, int color) {
         this.value = value;
         this.color = color;
         this.title = title;
@@ -74,5 +75,13 @@ public class PieEntry {
 
     public void setSweepAngle(float sweepAngle) {
         this.sweepAngle = sweepAngle;
+    }
+
+    public boolean isDefaultPie() {
+        return isDefaultPie;
+    }
+
+    public void setDefaultPie(boolean defaultPie) {
+        isDefaultPie = defaultPie;
     }
 }

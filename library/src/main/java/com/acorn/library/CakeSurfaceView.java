@@ -3,8 +3,6 @@ package com.acorn.library;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.animation.Animator;
-import android.animation.Animator.AnimatorListener;
 import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
 import android.animation.ValueAnimator.AnimatorUpdateListener;
@@ -21,7 +19,6 @@ import android.os.Build;
 import android.text.Layout.Alignment;
 import android.text.StaticLayout;
 import android.text.TextPaint;
-import android.text.method.MovementMethod;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -32,6 +29,8 @@ import android.view.ViewTreeObserver.OnPreDrawListener;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.Toast;
+
+import com.acorn.library.utils.TransUtil;
 
 /**
  * 饼图

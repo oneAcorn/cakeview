@@ -11,6 +11,12 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 
+import com.acorn.library.drawable.BaseSectorDrawable;
+import com.acorn.library.drawable.SectorDrawable;
+import com.acorn.library.entry.PieEntry;
+import com.acorn.library.listener.OnPieViewItemClickListener;
+import com.acorn.library.listener.SectorFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +28,7 @@ public class PieView extends View {
             0xffF9BB08, 0xffA4529C, 0xffff6f2f, 0xff990099, 0xff999999,
             0xff663300};
 
-    private List<SectorDrawable> mSectorDrawables;
+    private List<BaseSectorDrawable> mSectorDrawables;
     //当总值小于1时,扇形的文本
     private static final String otherWord = "其他";
 
@@ -39,7 +45,7 @@ public class PieView extends View {
     private Runnable mSingleClickRunnable = new Runnable() {
         @Override
         public void run() {
-            SectorDrawable clickSectorDrawable = getTouchSectorDrawable(downX, downY);
+            BaseSectorDrawable clickSectorDrawable = getTouchSectorDrawable(downX, downY);
             if (null != mOnPieViewItemClickListener) {
                 mOnPieViewItemClickListener.onPieClick(clickSectorDrawable, 0);
             }
@@ -49,7 +55,7 @@ public class PieView extends View {
                 } else {
                     clickSectorDrawable.press();
                     if (isAutoUnpressOther) {
-                        for (SectorDrawable sectorDrawable : mSectorDrawables) {
+                        for (BaseSectorDrawable sectorDrawable : mSectorDrawables) {
                             if (sectorDrawable.equals(clickSectorDrawable))
                                 continue;
                             sectorDrawable.unPress();
@@ -77,7 +83,7 @@ public class PieView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         if (null != mSectorDrawables && !mSectorDrawables.isEmpty()) {
-            for (SectorDrawable sectorDrawable : mSectorDrawables) {
+            for (BaseSectorDrawable sectorDrawable : mSectorDrawables) {
                 sectorDrawable.draw(canvas);
             }
         }
@@ -118,12 +124,21 @@ public class PieView extends View {
     }
 
 
-    public void setPieEntries(List<PieEntry> pieEntries) {
-        ensureSectorDrawables(revisePieEntries(pieEntries));
+    public void setPieEntries(List<? extends PieEntry> pieEntries) {
+        setPieEntries(pieEntries, new SectorFactory() {
+            @Override
+            public BaseSectorDrawable createSector(PieEntry pieEntry) {
+                return new SectorDrawable(pieEntry);
+            }
+        });
+    }
+
+    public void setPieEntries(List<? extends PieEntry> pieEntries, SectorFactory sectorFactory) {
+        ensureSectorDrawables(revisePieEntries(pieEntries), sectorFactory);
         invalidate();
     }
 
-    private List<PieEntry> revisePieEntries(List<PieEntry> pieEntries) {
+    private List<? extends PieEntry> revisePieEntries(List<? extends PieEntry> pieEntries) {
         float valueSum = 0;
         if (null != pieEntries && !pieEntries.isEmpty()) {
             //上个扇形的结束边界角度
@@ -157,27 +172,35 @@ public class PieView extends View {
         } else if (null == pieEntries) {
             pieEntries = new ArrayList<>();
         }
-        if (Float.compare(valueSum, 1) == -1) { //总数小于1,用其他补全
-            pieEntries.add(new PieEntry(1f - valueSum, DEFAULT_OTHER_SECTOR_COLOR, otherWord, pieEntries.get(0).getTextSize()));
-        }
+//        if (Float.compare(valueSum, 1) == -1) { //总数小于1,用其他补全
+//            PieEntry defaultEntry = new PieEntry(1f - valueSum, DEFAULT_OTHER_SECTOR_COLOR, otherWord, pieEntries.get(0).getTextSize());
+//            defaultEntry.setStartAngle(valueSum * CIRCLE_TOTAL_ANGLE);
+//            defaultEntry.setSweepAngle(defaultEntry.getValue() * CIRCLE_TOTAL_ANGLE);
+//            defaultEntry.setDefaultPie(true);
+//            pieEntries.add(defaultEntry);
+//        }
         return pieEntries;
     }
 
-    private void ensureSectorDrawables(List<PieEntry> pieEntries) {
+    private void ensureSectorDrawables(List<? extends PieEntry> pieEntries, SectorFactory sectorFactory) {
         mSectorDrawables = new ArrayList<>();
         for (PieEntry pieEntry : pieEntries) {
-            SectorDrawable sectorDrawable = new SectorDrawable();
-            sectorDrawable.setPieEntry(pieEntry);
+            BaseSectorDrawable sectorDrawable;
+            if (pieEntry.isDefaultPie()) {
+                sectorDrawable = new SectorDrawable(pieEntry);
+            } else {
+                sectorDrawable = sectorFactory.createSector(pieEntry);
+            }
             mSectorDrawables.add(sectorDrawable);
             sectorDrawable.setCallback(this);
         }
     }
 
-    private SectorDrawable getTouchSectorDrawable(int x, int y) {
+    private BaseSectorDrawable getTouchSectorDrawable(int x, int y) {
         if (null == mSectorDrawables || mSectorDrawables.isEmpty())
             return null;
-        SectorDrawable clickDrawable = null;
-        for (SectorDrawable sectorDrawable : mSectorDrawables) {
+        BaseSectorDrawable clickDrawable = null;
+        for (BaseSectorDrawable sectorDrawable : mSectorDrawables) {
             if (sectorDrawable.containAngle(x, y)) {
                 clickDrawable = sectorDrawable;
                 break;
@@ -192,7 +215,7 @@ public class PieView extends View {
 
         if (null != mSectorDrawables && !mSectorDrawables.isEmpty()) {
             Rect rect = new Rect(0, 0, w, h);
-            for (SectorDrawable sectorDrawable : mSectorDrawables) {
+            for (BaseSectorDrawable sectorDrawable : mSectorDrawables) {
                 sectorDrawable.setBounds(rect);
             }
         }
@@ -216,7 +239,7 @@ public class PieView extends View {
 
     @Override
     protected boolean verifyDrawable(Drawable who) {
-        return who instanceof SectorDrawable || super.verifyDrawable(who);
+        return who instanceof BaseSectorDrawable || super.verifyDrawable(who);
     }
 
     public void setOnPieViewItemClickListener(OnPieViewItemClickListener onPieViewItemClickListener) {
