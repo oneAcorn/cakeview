@@ -91,13 +91,13 @@ public class MainActivity extends AppCompatActivity {
 
     private List<HollowPieEntry> getTestData4() {
         List<HollowPieEntry> pieEntries = new ArrayList<>();
-        pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFFFF0000, 0.4f, 0xFFFFFF00));
-        pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFFFF7F00, 0.4f, 0xFF0000FF));
-        pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFFFFFF00, 0.4f, 0xFF00FFFF));
-        pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFF00FF00, 0.4f, 0xFFFF0000));
-        pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFF00FFFF, 0.4f, 0xFF8B00FF));
-        pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFF0000FF, 0.4f, 0xFFFF7F00));
-        pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFF8B00FF, 0.4f, 0xFF00FF00));
+        pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFFFF0000, 0.6f));
+        pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFFFF7F00, 0.6f));
+        pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFFFFFF00, 0.6f));
+        pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFF00FF00, 0.6f));
+        pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFF00FFFF, 0.6f));
+        pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFF0000FF, 0.6f));
+        pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFF8B00FF, 0.6f));
         return pieEntries;
     }
 }

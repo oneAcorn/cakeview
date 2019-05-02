@@ -21,7 +21,7 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
     //高亮动画弹出距离占比
     private float highlightDistanceRate;
 
-    private Paint hollowPaint, sectorPaint;
+    private Paint sectorPaint;
     private RectF hollowRectF;
     //圆心
     private int cx, cy;
@@ -37,12 +37,10 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
         super(pieEntry);
         this.sectorRadiusRate = sectorRadiusRate;
         this.highlightDistanceRate = highlightDistanceRate;
-        hollowPaint = new Paint();
-        hollowPaint.setAntiAlias(true);  //抗锯齿
-        hollowPaint.setStyle(Paint.Style.FILL);
-        sectorPaint = new Paint(hollowPaint);
+        sectorPaint = new Paint();
+        sectorPaint.setAntiAlias(true);  //抗锯齿
+        sectorPaint.setStyle(Paint.Style.FILL);
 
-        hollowPaint.setColor(pieEntry.getHollowColor());
         sectorPaint.setColor(pieEntry.getColor());
     }
 
@@ -64,7 +62,6 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
     @Override
     public void draw(Canvas canvas) {
         if (null != hollowRectF && null != sectorPath && null != mPieEntry) {
-            canvas.drawArc(hollowRectF, mPieEntry.getStartAngle(), mPieEntry.getSweepAngle(), true, hollowPaint);
             canvas.drawPath(sectorPath, sectorPaint);
         }
     }
@@ -78,20 +75,23 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
     }
 
     private void computeGraphics(int cx, int cy) {
+        //计算小扇形（空出来的扇形）的rect
         float hollowLengthRate = isEqualOrLessThanZero(mPieEntry.getHollowLengthRate()) ? DEFAULT_HOLLOW_LENGTH_RATE : mPieEntry.getHollowLengthRate();
         float hollowRadius = radius * hollowLengthRate;
         hollowRectF = new RectF(cx - hollowRadius, cy - hollowRadius, cx + hollowRadius, cy + hollowRadius);
-        PointF[] sectorPathArr = new PointF[]{
-                CircleUtil.getPositionByAngle(mPieEntry.getStartAngle(), (int) hollowRadius, cx, cy),
-                CircleUtil.getPositionByAngle(mPieEntry.getStartAngle(), radius, cx, cy),
-                CircleUtil.getPositionByAngle(mPieEntry.getStartAngle() + mPieEntry.getSweepAngle(), radius, cx, cy),
-                CircleUtil.getPositionByAngle(mPieEntry.getStartAngle() + mPieEntry.getSweepAngle(), (int) hollowRadius, cx, cy)
-        };
+
+        //计算出大扇形的rect
+        float inset = hollowRadius - (float) radius;
+        RectF sectorRectF = new RectF(hollowRectF);
+        sectorRectF.inset(inset, inset);
+
         sectorPath = new Path();
-        sectorPath.moveTo(sectorPathArr[0].x, sectorPathArr[0].y);
-        sectorPath.lineTo(sectorPathArr[1].x, sectorPathArr[1].y);
-        sectorPath.lineTo(sectorPathArr[2].x, sectorPathArr[2].y);
-        sectorPath.lineTo(sectorPathArr[3].x, sectorPathArr[3].y);
+        sectorPath.arcTo(hollowRectF, mPieEntry.getStartAngle(), mPieEntry.getSweepAngle());
+        PointF point1 = CircleUtil.getPositionByAngle(mPieEntry.getStartAngle() + mPieEntry.getSweepAngle(), radius, cx, cy);
+        sectorPath.lineTo(point1.x, point1.y);
+        sectorPath.arcTo(sectorRectF, mPieEntry.getStartAngle() + mPieEntry.getSweepAngle(), -mPieEntry.getSweepAngle());
+        PointF point2 = CircleUtil.getPositionByAngle(mPieEntry.getStartAngle(), (int) hollowRadius, cx, cy);
+        sectorPath.lineTo(point2.x, point2.y);
     }
 
     private boolean isEqualOrLessThanZero(float value) {
