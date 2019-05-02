@@ -1,5 +1,6 @@
 package com.acorn.library;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
@@ -9,12 +10,13 @@ import android.support.v4.view.MotionEventCompat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.animation.DecelerateInterpolator;
 
 import com.acorn.library.drawable.BaseSectorDrawable;
 import com.acorn.library.drawable.SectorDrawable;
-import com.acorn.library.entry.HollowPieEntry;
 import com.acorn.library.entry.PieEntry;
 import com.acorn.library.listener.OnPieViewItemClickListener;
 import com.acorn.library.listener.SectorFactory;
@@ -36,10 +38,24 @@ public class PieView extends View {
     private static final String otherWord = "其他";
 
     private OnPieViewItemClickListener mOnPieViewItemClickListener;
-    private int minTouchSlop;
     private Handler mHandler = new Handler();
     private static final int MAX_SINGLE_CLICK_TIME = 50;// 单击最长等待时间
     private int downX, downY;
+    //最小触摸移动距离
+    private int minTouchSlop;
+    /**
+     * 滑动速度检测类
+     */
+    private VelocityTracker mVelocityTracker;
+    /**
+     * 最小滑动速率
+     */
+    private int minFlingVelocity;
+    /**
+     * 最大滑动速率
+     */
+    private int maxFlingVelocity;
+    private ValueAnimator inertiaAnim;
 
     //圆心
     private int cx, cy;
@@ -85,6 +101,10 @@ public class PieView extends View {
     public PieView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         minTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
+        //初始化最小和最大滑动速率
+        ViewConfiguration vc = ViewConfiguration.get(context);
+        minFlingVelocity = vc.getScaledMinimumFlingVelocity() * 8;
+        maxFlingVelocity = vc.getScaledMaximumFlingVelocity();
     }
 
     @Override
@@ -125,10 +145,10 @@ public class PieView extends View {
             case MotionEvent.ACTION_UP:
                 int upX = (int) event.getX();
                 int upY = (int) event.getY();
-                if (Math.abs(upX - downX) <= minTouchSlop && Math.abs(upY - downY) <= minTouchSlop) { //单击
+                if (Math.abs(upX - downX) <= minTouchSlop && Math.abs(upY - downY) <= minTouchSlop && (null == inertiaAnim || !inertiaAnim.isRunning())) { //单击
                     mHandler.postDelayed(mSingleClickRunnable, MAX_SINGLE_CLICK_TIME);
                 }
-                stopDragging(event);
+                stopDragging();
                 break;
             case MotionEvent.ACTION_CANCEL:
                 break;
@@ -141,9 +161,18 @@ public class PieView extends View {
     private float lastAngle;
 
     private void startDrag(MotionEvent event) {
+        if (isHighlightEnable && isHighlighting()) {
+            releaseDrag();
+            return;
+        }
         isDragging = false;
         isDownOnSector = getTouchSectorDrawable((int) event.getX(), (int) event.getY()) != null;
         lastAngle = CircleUtil.getAngleByPosition(event.getX(), event.getY(), cx, cy);
+        if (isDownOnSector) {
+            //加入速度检测
+            mVelocityTracker = VelocityTracker.obtain();
+            mVelocityTracker.addMovement(event);
+        }
         log("startDrag " + lastAngle);
     }
 
@@ -158,11 +187,70 @@ public class PieView extends View {
             sectorDrawable.offsetAngle(offsetAngle);
         }
         lastAngle = moveAngle;
+        mVelocityTracker.addMovement(event);
     }
 
-    private void stopDragging(MotionEvent event) {
+    private void stopDragging() {
+        if (isDragging) {
+            //通过滑动的距离计算出X,Y方向的速度
+            mVelocityTracker.computeCurrentVelocity(1000);
+            float velocityX = Math.abs(mVelocityTracker.getXVelocity());
+            float velocityY = Math.abs(mVelocityTracker.getYVelocity());
+            computeInertiaAnimator(velocityX, velocityY);
+        }
+        releaseDrag();
+    }
+
+    private void releaseDrag() {
         isDownOnSector = false;
         isDragging = false;
+        if (mVelocityTracker != null) { //移除速度检测
+            mVelocityTracker.recycle();
+            mVelocityTracker = null;
+        }
+    }
+
+    private void computeInertiaAnimator(float velocityX, float velocityY) {
+        float velocity = Math.max(velocityX, velocityY);
+        if (velocity > minFlingVelocity) {
+            if (inertiaAnim == null)
+                initInertiaAnim();
+            inertiaAnim.setDuration((long) (velocity / 10f));
+            log("computeInertiaAnimator " + velocity);
+            inertiaAnim.start();
+        }
+    }
+
+
+    private float lastInertiaFraction;
+
+    private void initInertiaAnim() {
+        inertiaAnim = ValueAnimator.ofFloat(0f, 1f);
+        inertiaAnim.setInterpolator(new DecelerateInterpolator());
+        inertiaAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float fraction = animation.getAnimatedFraction();
+                for (BaseSectorDrawable sectorDrawable : mSectorDrawables) {
+                    sectorDrawable.offsetAngle((fraction - lastInertiaFraction) * 1000);
+                }
+                log("initInertiaAnim " + fraction + "," + lastInertiaFraction);
+                lastInertiaFraction = fraction;
+            }
+        });
+    }
+
+    private boolean isHighlighting() {
+        if (null == mSectorDrawables || mSectorDrawables.isEmpty())
+            return false;
+        boolean res = false;
+        for (BaseSectorDrawable sectorDrawable : mSectorDrawables) {
+            if (sectorDrawable.isHighlighting()) {
+                res = true;
+                break;
+            }
+        }
+        return res;
     }
 
     private void log(String string) {

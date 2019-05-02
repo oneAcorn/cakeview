@@ -77,13 +77,20 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
 
     @Override
     public boolean containAngle(float clickX, float clickY) {
+        if (getPieEntry() == null)
+            return false;
         float clickAngle = CircleUtil.getAngleByPosition(clickX, clickY, cx, cy, radius);
         //触摸点距离圆心距离
         float clickRadius = CircleUtil.getDistanceByPosition(cx, cy, clickX, clickY);
         PieEntry pieEntry = getPieEntry();
-        return Float.compare(clickRadius, hollowRadius) == 1 && pieEntry != null && (Float.compare(clickAngle, pieEntry.getStartAngle()) == 0 ||
-                Float.compare(clickAngle, pieEntry.getStartAngle()) == 1) &&
-                Float.compare(clickAngle, pieEntry.getStartAngle() + pieEntry.getSweepAngle()) == -1;
+        if (Float.compare(pieEntry.getStartAngle() + pieEntry.getSweepAngle(), 360f) == 1) { //扇形区覆盖起始角度的情况
+            return Float.compare(clickRadius, hollowRadius) == 1 &&
+                    CircleUtil.isContainAngle(clickAngle, pieEntry.getStartAngle(), 360f) ||
+                    CircleUtil.isContainAngle(clickAngle, 0, (pieEntry.getStartAngle() + pieEntry.getSweepAngle()) % 360f);
+        } else {
+            return Float.compare(clickRadius, hollowRadius) == 1 &&
+                    CircleUtil.isContainAngle(clickAngle, pieEntry.getStartAngle(), pieEntry.getStartAngle() + pieEntry.getSweepAngle());
+        }
     }
 
     @Override
@@ -97,7 +104,7 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
     public void offsetAngle(float offsetAngle) {
         if (null == mPieEntry)
             return;
-        mPieEntry.setStartAngle(mPieEntry.getStartAngle() + offsetAngle);
+        mPieEntry.setStartAngle((360f + mPieEntry.getStartAngle() + offsetAngle) % 360f);
         computeGraphics(getOriginCx(), getOriginCy());
         invalidateSelf();
     }

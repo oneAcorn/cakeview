@@ -110,6 +110,19 @@ public class CircleUtil {
     }
 
     /**
+     * targetAngle是否在sectorStartAngle+sectorEndAngle描述的扇形区域内
+     * @param targetAngle
+     * @param sectorStartAngle
+     * @param sectorEndAngle
+     * @return
+     */
+    public static boolean isContainAngle(float targetAngle,float sectorStartAngle,float sectorEndAngle){
+        return (Float.compare(targetAngle, sectorStartAngle) == 0 ||
+                Float.compare(targetAngle, sectorStartAngle) == 1) &&
+                Float.compare(targetAngle, sectorEndAngle) == -1;
+    }
+
+    /**
      * 角度转弧度
      *
      * @param angle

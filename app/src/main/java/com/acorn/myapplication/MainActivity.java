@@ -28,13 +28,13 @@ public class MainActivity extends AppCompatActivity {
         mPieView = findViewById(R.id.pieView);
         btn = findViewById(R.id.btn);
 
-        mPieView.setPieEntries(getTestData1());
-//        mPieView.setPieEntries(getTestData4(), new SectorFactory<HollowPieEntry>() {
-//            @Override
-//            public BaseSectorDrawable<HollowPieEntry> createSector(HollowPieEntry pieEntry, int position) {
-//                return new HollowSectorDrawable(pieEntry);
-//            }
-//        });
+//        mPieView.setPieEntries(getTestData1());
+        mPieView.setPieEntries(getTestData4(), new SectorFactory<HollowPieEntry>() {
+            @Override
+            public BaseSectorDrawable<HollowPieEntry> createSector(HollowPieEntry pieEntry, int position) {
+                return new HollowSectorDrawable(pieEntry);
+            }
+        });
         mPieView.setHighlightEnable(true);
         mPieView.setAutoUnpressOther(true);
         mPieView.setOnPieViewItemClickListener(new OnPieViewItemClickListener() {
