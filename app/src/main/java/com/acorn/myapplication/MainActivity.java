@@ -28,13 +28,13 @@ public class MainActivity extends AppCompatActivity {
         mPieView = findViewById(R.id.pieView);
         btn = findViewById(R.id.btn);
 
-//        mPieView.setPieEntries(getTestData1());
-        mPieView.setPieEntries(getTestData4(), new SectorFactory<HollowPieEntry>() {
-            @Override
-            public BaseSectorDrawable createSector(HollowPieEntry pieEntry) {
-                return new HollowSectorDrawable(pieEntry);
-            }
-        });
+        mPieView.setPieEntries(getTestData1());
+//        mPieView.setPieEntries(getTestData4(), new SectorFactory<HollowPieEntry>() {
+//            @Override
+//            public BaseSectorDrawable<HollowPieEntry> createSector(HollowPieEntry pieEntry, int position) {
+//                return new HollowSectorDrawable(pieEntry);
+//            }
+//        });
         mPieView.setHighlightEnable(true);
         mPieView.setAutoUnpressOther(true);
         mPieView.setOnPieViewItemClickListener(new OnPieViewItemClickListener() {
@@ -89,8 +89,8 @@ public class MainActivity extends AppCompatActivity {
 //        return pieEntries;
 //    }
 
-    private List<HollowPieEntry> getTestData4() {
-        List<HollowPieEntry> pieEntries = new ArrayList<>();
+    private List<PieEntry> getTestData4() {
+        List<PieEntry> pieEntries = new ArrayList<>();
         pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFFFF0000, 0.6f));
         pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFFFF7F00, 0.6f));
         pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFFFFFF00, 0.6f));
@@ -100,4 +100,10 @@ public class MainActivity extends AppCompatActivity {
         pieEntries.add(new HollowPieEntry(1f / 7f, "1", 14, 0xFF8B00FF, 0.6f));
         return pieEntries;
     }
+
+//    private List<PieEntry> getTestData5() {
+//        List<PieEntry> pieEntries = new ArrayList<>();
+//        pieEntries.add(new PieEntry(1f,"sdaa"));
+//        pieEntries.add(new HollowPieEntry(123f,"fdsa"));
+//    }
 }

@@ -30,6 +30,19 @@ public class CircleUtil {
     /**
      * 根据坐标计算点相对圆心的角度,与从圆心水平向右作的边的夹角
      *
+     * @param x1 坐标
+     * @param y1 坐标
+     * @param cX 圆心
+     * @param cY 圆心
+     * @return 角度, 若radius不为0且坐标超出圆的范围时返回-1.
+     */
+    public static float getAngleByPosition(float x1, float y1, int cX, int cY) {
+        return getAngleByPosition(x1, y1, cX, cY, 0);
+    }
+
+    /**
+     * 根据坐标计算点相对圆心的角度,与从圆心水平向右作的边的夹角
+     *
      * @param x1     坐标
      * @param y1     坐标
      * @param cX     圆心
@@ -63,6 +76,7 @@ public class CircleUtil {
         return (float) angle % 360;
     }
 
+
     /**
      * 获取扇形中心点坐标
      *
@@ -78,6 +92,21 @@ public class CircleUtil {
         // 如:一个扇形,起始角度为10,结束角度为40,则arc=10+(40-10)/2
         float angle = sAngle + (tAngle - sAngle) / 2;
         return getPositionByAngle(angle, radius, cX, cY);
+    }
+
+    /**
+     * 获取触摸点到圆心的直线距离
+     *
+     * @param cx     圆心
+     * @param cy     圆心
+     * @param touchX 触摸位置
+     * @param touchY 触摸位置
+     * @return 圆心到触摸点的距离(正数)
+     */
+    public static float getDistanceByPosition(int cx, int cy, float touchX, float touchY) {
+        float side1 = Math.abs((float) cx - touchX);
+        float side2 = Math.abs((float) cy - touchY);
+        return (float) Math.sqrt(side1 * side1 + side2 * side2);
     }
 
     /**

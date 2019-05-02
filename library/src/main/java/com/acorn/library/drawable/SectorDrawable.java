@@ -30,9 +30,11 @@ public class SectorDrawable extends BaseSectorDrawable<PieEntry> {
     private RectF mRectF;
     //圆心
     private int cx, cy;
+    private int lastCx = -1, lastCy = -1;
     //半径
     private int radius;
     private ValueAnimator pressAnim;
+    private boolean isStartAngleChanged;
 
     public SectorDrawable(PieEntry pieEntry) {
         this(pieEntry, DEFAULT_SECTOR_RADIUS_RATE, DEFAULT_HIGHLIGHT_DISTANCE_RATE);
@@ -62,11 +64,20 @@ public class SectorDrawable extends BaseSectorDrawable<PieEntry> {
     }
 
     @Override
+    public void offsetAngle(float offsetAngle) {
+        mPieEntry.setStartAngle(mPieEntry.getStartAngle() + offsetAngle);
+        isStartAngleChanged = true;
+        invalidateSelf();
+    }
+
+    @Override
     public void press() {
         if (isHighlighting())
             return;
-        if (null == pressAnim)
+        if (null == pressAnim || isStartAngleChanged) {
             initPressAnim();
+            isStartAngleChanged = false;
+        }
         if (!pressAnim.isStarted())
             pressAnim.start();
     }
@@ -75,8 +86,10 @@ public class SectorDrawable extends BaseSectorDrawable<PieEntry> {
     public void unPress() {
         if (!isHighlighting())
             return;
-        if (null == pressAnim)
+        if (null == pressAnim || isStartAngleChanged) {
             initPressAnim();
+            isStartAngleChanged = false;
+        }
         if (pressAnim.isRunning())
             pressAnim.cancel();
         pressAnim.reverse();
@@ -88,7 +101,7 @@ public class SectorDrawable extends BaseSectorDrawable<PieEntry> {
             public void onAnimationUpdate(ValueAnimator animation) {
                 cx = ((Number) animation.getAnimatedValue("cx")).intValue();
                 cy = ((Number) animation.getAnimatedValue("cy")).intValue();
-                computeRectF(cx, cy);
+                updateGraphics(cx, cy);
                 invalidateSelf();
             }
         };
@@ -146,5 +159,15 @@ public class SectorDrawable extends BaseSectorDrawable<PieEntry> {
 
     private void computeRectF(int cx, int cy) {
         mRectF = new RectF(cx - radius, cy - radius, cx + radius, cy + radius);
+    }
+
+    private void updateGraphics(int cx, int cy) {
+        if (lastCx == -1)
+            lastCx = cx;
+        if (lastCy == -1)
+            lastCy = cy;
+        mRectF.offset(cx - lastCx, cy - lastCy);
+        lastCx = cx;
+        lastCy = cy;
     }
 }

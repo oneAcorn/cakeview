@@ -77,6 +77,8 @@ public abstract class BaseSectorDrawable<T extends PieEntry> extends Drawable {
      */
     public abstract boolean containAngle(float clickX, float clickY);
 
+    public abstract void offsetAngle(float offsetAngle);
+
     @Override
     protected void onBoundsChange(Rect bounds) {
         super.onBoundsChange(bounds);

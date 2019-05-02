@@ -7,15 +7,18 @@ import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.support.v4.view.MotionEventCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 
 import com.acorn.library.drawable.BaseSectorDrawable;
 import com.acorn.library.drawable.SectorDrawable;
+import com.acorn.library.entry.HollowPieEntry;
 import com.acorn.library.entry.PieEntry;
 import com.acorn.library.listener.OnPieViewItemClickListener;
 import com.acorn.library.listener.SectorFactory;
+import com.acorn.library.utils.CircleUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +40,11 @@ public class PieView extends View {
     private Handler mHandler = new Handler();
     private static final int MAX_SINGLE_CLICK_TIME = 50;// 单击最长等待时间
     private int downX, downY;
+
+    //圆心
+    private int cx, cy;
+    //半径
+    private int radius;
 
     //是否点击高亮
     private boolean isHighlightEnable = true;
@@ -102,12 +110,16 @@ public class PieView extends View {
                 if (mSingleClickRunnable != null) { //移除单击runnable
                     mHandler.removeCallbacks(mSingleClickRunnable);
                 }
+                startDrag(event);
                 break;
             case MotionEvent.ACTION_MOVE:
                 int moveX = (int) event.getX();
                 int moveY = (int) event.getY();
                 if (null != mSingleClickRunnable && (Math.abs(moveX - downX) > minTouchSlop || Math.abs(moveY - downY) > minTouchSlop)) { //大于单击最小移动距离,移除单击runnable
                     mHandler.removeCallbacks(mSingleClickRunnable);
+                }
+                if (isDragging || Math.abs(moveX - downX) > minTouchSlop || Math.abs(moveY - downY) > minTouchSlop) {
+                    onDragging(event);
                 }
                 break;
             case MotionEvent.ACTION_UP:
@@ -116,6 +128,7 @@ public class PieView extends View {
                 if (Math.abs(upX - downX) <= minTouchSlop && Math.abs(upY - downY) <= minTouchSlop) { //单击
                     mHandler.postDelayed(mSingleClickRunnable, MAX_SINGLE_CLICK_TIME);
                 }
+                stopDragging(event);
                 break;
             case MotionEvent.ACTION_CANCEL:
                 break;
@@ -123,22 +136,54 @@ public class PieView extends View {
         return true;
     }
 
+    private boolean isDownOnSector;
+    private boolean isDragging;
+    private float lastAngle;
 
-    public void setPieEntries(List<? extends PieEntry> pieEntries) {
-        setPieEntries(pieEntries, new SectorFactory() {
+    private void startDrag(MotionEvent event) {
+        isDragging = false;
+        isDownOnSector = getTouchSectorDrawable((int) event.getX(), (int) event.getY()) != null;
+        lastAngle = CircleUtil.getAngleByPosition(event.getX(), event.getY(), cx, cy);
+        log("startDrag " + lastAngle);
+    }
+
+    private void onDragging(MotionEvent event) {
+        if (!isDownOnSector)
+            return;
+        isDragging = true;
+        float moveAngle = CircleUtil.getAngleByPosition(event.getX(), event.getY(), cx, cy);
+        float offsetAngle = moveAngle - lastAngle;
+        log("onDragging " + ",moveAngle " + moveAngle + ",lastAngle " + lastAngle + ",offset " + offsetAngle);
+        for (BaseSectorDrawable sectorDrawable : mSectorDrawables) {
+            sectorDrawable.offsetAngle(offsetAngle);
+        }
+        lastAngle = moveAngle;
+    }
+
+    private void stopDragging(MotionEvent event) {
+        isDownOnSector = false;
+        isDragging = false;
+    }
+
+    private void log(String string) {
+        Log.i("PieView", string);
+    }
+
+    public void setPieEntries(List<PieEntry> pieEntries) {
+        setPieEntries(pieEntries, new SectorFactory<PieEntry>() {
             @Override
-            public BaseSectorDrawable createSector(PieEntry pieEntry) {
+            public BaseSectorDrawable createSector(PieEntry pieEntry, int position) {
                 return new SectorDrawable(pieEntry);
             }
         });
     }
 
-    public void setPieEntries(List<? extends PieEntry> pieEntries, SectorFactory sectorFactory) {
+    public void setPieEntries(List<PieEntry> pieEntries, SectorFactory sectorFactory) {
         ensureSectorDrawables(revisePieEntries(pieEntries), sectorFactory);
         invalidate();
     }
 
-    private List<? extends PieEntry> revisePieEntries(List<? extends PieEntry> pieEntries) {
+    private List<PieEntry> revisePieEntries(List<PieEntry> pieEntries) {
         float valueSum = 0;
         if (null != pieEntries && !pieEntries.isEmpty()) {
             //上个扇形的结束边界角度
@@ -173,7 +218,7 @@ public class PieView extends View {
             pieEntries = new ArrayList<>();
         }
 //        if (Float.compare(valueSum, 1) == -1) { //总数小于1,用其他补全
-//            PieEntry defaultEntry = new PieEntry(1f - valueSum, DEFAULT_OTHER_SECTOR_COLOR, otherWord, pieEntries.get(0).getTextSize());
+//            PieEntry defaultEntry = new PieEntry(1f - valueSum, otherWord,pieEntries.get(0).getTextSize(),DEFAULT_OTHER_SECTOR_COLOR);
 //            defaultEntry.setStartAngle(valueSum * CIRCLE_TOTAL_ANGLE);
 //            defaultEntry.setSweepAngle(defaultEntry.getValue() * CIRCLE_TOTAL_ANGLE);
 //            defaultEntry.setDefaultPie(true);
@@ -184,12 +229,14 @@ public class PieView extends View {
 
     private void ensureSectorDrawables(List<? extends PieEntry> pieEntries, SectorFactory sectorFactory) {
         mSectorDrawables = new ArrayList<>();
-        for (PieEntry pieEntry : pieEntries) {
+        int length = pieEntries.size();
+        for (int i = 0; i < length; i++) {
+            PieEntry pieEntry = pieEntries.get(i);
             BaseSectorDrawable sectorDrawable;
             if (pieEntry.isDefaultPie()) {
                 sectorDrawable = new SectorDrawable(pieEntry);
             } else {
-                sectorDrawable = sectorFactory.createSector(pieEntry);
+                sectorDrawable = sectorFactory.createSector(pieEntry, i);
             }
             mSectorDrawables.add(sectorDrawable);
             sectorDrawable.setCallback(this);
@@ -212,6 +259,8 @@ public class PieView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
+        cx = (int) (w / 2f);
+        cy = (int) (h / 2f);
 
         if (null != mSectorDrawables && !mSectorDrawables.isEmpty()) {
             Rect rect = new Rect(0, 0, w, h);
