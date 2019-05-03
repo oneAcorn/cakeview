@@ -38,6 +38,7 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
     private float hollowRadius;
     private Path sectorPath;
     private ValueAnimator pressAnim;
+    private boolean isStartAngleChanged;
 
     public HollowSectorDrawable(HollowPieEntry pieEntry) {
         this(pieEntry, DEFAULT_SECTOR_RADIUS_RATE, DEFAULT_HIGHLIGHT_DISTANCE_RATE);
@@ -58,8 +59,10 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
     public void press() {
         if (isHighlighting())
             return;
-        if (null == pressAnim)
+        if (null == pressAnim || isStartAngleChanged) {
             initPressAnim();
+            isStartAngleChanged = false;
+        }
         if (!pressAnim.isStarted())
             pressAnim.start();
     }
@@ -68,8 +71,10 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
     public void unPress() {
         if (!isHighlighting())
             return;
-        if (null == pressAnim)
+        if (null == pressAnim || isStartAngleChanged) {
             initPressAnim();
+            isStartAngleChanged = false;
+        }
         if (pressAnim.isRunning())
             pressAnim.cancel();
         pressAnim.reverse();
@@ -104,6 +109,7 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
     public void offsetAngle(float offsetAngle) {
         if (null == mPieEntry)
             return;
+        isStartAngleChanged = true;
         mPieEntry.setStartAngle((360f + mPieEntry.getStartAngle() + offsetAngle) % 360f);
         computeGraphics(getOriginCx(), getOriginCy());
         invalidateSelf();

@@ -7,6 +7,7 @@ public class PieEntry {
     private String title;
     //字体大小sp
     private int textSize;
+    private int textColor;
     private float startAngle;
     private float sweepAngle;
     private boolean isDefaultPie;
@@ -75,6 +76,14 @@ public class PieEntry {
 
     public void setSweepAngle(float sweepAngle) {
         this.sweepAngle = sweepAngle;
+    }
+
+    public int getTextColor() {
+        return textColor;
+    }
+
+    public void setTextColor(int textColor) {
+        this.textColor = textColor;
     }
 
     public boolean isDefaultPie() {

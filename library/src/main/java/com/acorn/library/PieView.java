@@ -41,6 +41,7 @@ public class PieView extends View {
     private Handler mHandler = new Handler();
     private static final int MAX_SINGLE_CLICK_TIME = 50;// 单击最长等待时间
     private int downX, downY;
+    private int moveX, moveY;
     //最小触摸移动距离
     private int minTouchSlop;
     /**
@@ -56,6 +57,7 @@ public class PieView extends View {
      */
     private int maxFlingVelocity;
     private ValueAnimator inertiaAnim;
+    private int inertPace = 700;
 
     //圆心
     private int cx, cy;
@@ -133,8 +135,8 @@ public class PieView extends View {
                 startDrag(event);
                 break;
             case MotionEvent.ACTION_MOVE:
-                int moveX = (int) event.getX();
-                int moveY = (int) event.getY();
+                moveX = (int) event.getX();
+                moveY = (int) event.getY();
                 if (null != mSingleClickRunnable && (Math.abs(moveX - downX) > minTouchSlop || Math.abs(moveY - downY) > minTouchSlop)) { //大于单击最小移动距离,移除单击runnable
                     mHandler.removeCallbacks(mSingleClickRunnable);
                 }
@@ -148,7 +150,7 @@ public class PieView extends View {
                 if (Math.abs(upX - downX) <= minTouchSlop && Math.abs(upY - downY) <= minTouchSlop && (null == inertiaAnim || !inertiaAnim.isRunning())) { //单击
                     mHandler.postDelayed(mSingleClickRunnable, MAX_SINGLE_CLICK_TIME);
                 }
-                stopDragging();
+                stopDragging(upX, upY);
                 break;
             case MotionEvent.ACTION_CANCEL:
                 break;
@@ -159,6 +161,8 @@ public class PieView extends View {
     private boolean isDownOnSector;
     private boolean isDragging;
     private float lastAngle;
+    //惯性动画是否顺时针
+    private boolean isClockwise;
 
     private void startDrag(MotionEvent event) {
         if (isHighlightEnable && isHighlighting()) {
@@ -181,7 +185,9 @@ public class PieView extends View {
             return;
         isDragging = true;
         float moveAngle = CircleUtil.getAngleByPosition(event.getX(), event.getY(), cx, cy);
-        float offsetAngle = moveAngle - lastAngle;
+        float offsetAngle = computeOffset(moveAngle, lastAngle);
+        isClockwise = offsetAngle >= 0;
+
         log("onDragging " + ",moveAngle " + moveAngle + ",lastAngle " + lastAngle + ",offset " + offsetAngle);
         for (BaseSectorDrawable sectorDrawable : mSectorDrawables) {
             sectorDrawable.offsetAngle(offsetAngle);
@@ -190,7 +196,30 @@ public class PieView extends View {
         mVelocityTracker.addMovement(event);
     }
 
-    private void stopDragging() {
+    private float computeOffset(float moveAngle, float lastAngle) {
+        float moveAngle360 = moveAngle + CIRCLE_TOTAL_ANGLE;
+        float lastAngle360 = lastAngle + CIRCLE_TOTAL_ANGLE;
+        float offsetAngleWithoutZero = moveAngle - lastAngle; //未经过0度
+        float offsetAngleClockwiseZero = moveAngle360 - lastAngle; //经过0度,并顺时针
+        float offsetAngleAntiClockwiseZero = moveAngle - lastAngle360; //经过0度,并逆时针
+        float absOffsetAngleWithoutZero = Math.abs(offsetAngleWithoutZero);
+        float absOffsetAngleClockwiseZero = Math.abs(offsetAngleClockwiseZero);
+        float absOffsetAngleAntiClockwiseZero = Math.abs(offsetAngleAntiClockwiseZero);
+        //因为MotionEvent.ACTION_MOVE是高频事件,两触摸角度间距应该很小,所以取最小的角度就是正确的间隔
+        float minOffset = Math.min(Math.min(absOffsetAngleWithoutZero, absOffsetAngleClockwiseZero), absOffsetAngleAntiClockwiseZero);
+
+        float offset = 0;
+        if (Float.compare(minOffset, absOffsetAngleWithoutZero) == 0) {
+            offset = offsetAngleWithoutZero;
+        } else if (Float.compare(minOffset, absOffsetAngleClockwiseZero) == 0) {
+            offset = offsetAngleClockwiseZero;
+        } else if (Float.compare(minOffset, absOffsetAngleAntiClockwiseZero) == 0) {
+            offset = offsetAngleAntiClockwiseZero;
+        }
+        return offset;
+    }
+
+    private void stopDragging(int upX, int upY) {
         if (isDragging) {
             //通过滑动的距离计算出X,Y方向的速度
             mVelocityTracker.computeCurrentVelocity(1000);
@@ -232,12 +261,23 @@ public class PieView extends View {
             public void onAnimationUpdate(ValueAnimator animation) {
                 float fraction = animation.getAnimatedFraction();
                 for (BaseSectorDrawable sectorDrawable : mSectorDrawables) {
-                    sectorDrawable.offsetAngle((fraction - lastInertiaFraction) * 1000);
+                    sectorDrawable.offsetAngle(isClockwise ? (fraction - lastInertiaFraction) * inertPace :
+                            0 - ((fraction - lastInertiaFraction) * inertPace));
                 }
                 log("initInertiaAnim " + fraction + "," + lastInertiaFraction);
                 lastInertiaFraction = fraction;
             }
         });
+    }
+
+    /**
+     * 设置惯性动画步速,默认700
+     * @param inertPace
+     */
+    public void setInertPace(int inertPace) {
+        this.inertPace = inertPace;
+        if (null != inertiaAnim)
+            initInertiaAnim();
     }
 
     private boolean isHighlighting() {
