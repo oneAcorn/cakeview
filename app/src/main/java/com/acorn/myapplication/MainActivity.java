@@ -10,8 +10,9 @@ import com.acorn.library.drawable.BaseSectorDrawable;
 import com.acorn.library.drawable.HollowSectorDrawable;
 import com.acorn.library.entry.HollowPieEntry;
 import com.acorn.library.entry.PieEntry;
-import com.acorn.library.listener.OnPieViewItemClickListener;
-import com.acorn.library.listener.SectorFactory;
+import com.acorn.library.interfaces.OnPieViewItemClickListener;
+import com.acorn.library.interfaces.PieTextVisibleFilter;
+import com.acorn.library.interfaces.SectorFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,13 +29,19 @@ public class MainActivity extends AppCompatActivity {
         mPieView = findViewById(R.id.pieView);
         btn = findViewById(R.id.btn);
 
-//        mPieView.setPieEntries(getTestData1());
-        mPieView.setPieEntries(getTestData4(), new SectorFactory<HollowPieEntry>() {
+        mPieView.setPieEntries(getTestData2());
+        mPieView.setPieTextVisible(new PieTextVisibleFilter() {
             @Override
-            public BaseSectorDrawable<HollowPieEntry> createSector(HollowPieEntry pieEntry, int position) {
-                return new HollowSectorDrawable(pieEntry);
+            public boolean isShowText(PieEntry pieEntry) {
+                return true;
             }
         });
+//        mPieView.setPieEntries(getTestData4(), new SectorFactory<HollowPieEntry>() {
+//            @Override
+//            public BaseSectorDrawable<HollowPieEntry> createSector(HollowPieEntry pieEntry, int position) {
+//                return new HollowSectorDrawable(pieEntry);
+//            }
+//        });
         mPieView.setHighlightEnable(true);
         mPieView.setAutoUnpressOther(true);
         mPieView.setOnPieViewItemClickListener(new OnPieViewItemClickListener() {
@@ -51,7 +58,9 @@ public class MainActivity extends AppCompatActivity {
 
     private List<PieEntry> getTestData1() {
         List<PieEntry> pieEntries = new ArrayList<>();
-        pieEntries.add(new PieEntry(0.3f, "1"));
+        PieEntry pieEntry=new PieEntry(0.3f, "的撒范德萨就够了",14);
+        pieEntry.setTextColor(0xffffffff);
+        pieEntries.add(pieEntry);
         pieEntries.add(new PieEntry(0.2f, "2"));
         pieEntries.add(new PieEntry(0.4f, "3"));
         pieEntries.add(new PieEntry(0.1f, "4"));
@@ -60,17 +69,17 @@ public class MainActivity extends AppCompatActivity {
 
     private List<PieEntry> getTestData2() {
         List<PieEntry> pieEntries = new ArrayList<>();
-        pieEntries.add(new PieEntry(0.03f, "1"));
-        pieEntries.add(new PieEntry(0.02f, "2"));
-        pieEntries.add(new PieEntry(0.04f, "3"));
-        pieEntries.add(new PieEntry(0.01f, "4"));
+        pieEntries.add(new PieEntry(0.03f, "桂丰大厦1"));
+        pieEntries.add(new PieEntry(0.02f, "ga啊沙发2"));
+        pieEntries.add(new PieEntry(0.04f, "的撒个3"));
+        pieEntries.add(new PieEntry(0.01f, "三国杀v型4"));
         pieEntries.add(new PieEntry(0.06f, "5"));
         pieEntries.add(new PieEntry(0.04f, "6"));
         pieEntries.add(new PieEntry(0.08f, "7"));
         pieEntries.add(new PieEntry(0.02f, "8"));
         pieEntries.add(new PieEntry(0.3f, "9"));
         pieEntries.add(new PieEntry(0.1f, "10"));
-        pieEntries.add(new PieEntry(0.18f, "11"));
+        pieEntries.add(new PieEntry(0.18f, "啊沙发打算11"));
         pieEntries.add(new PieEntry(0.02f, "12"));
         pieEntries.add(new PieEntry(0.03f, "13"));
         pieEntries.add(new PieEntry(0.02f, "14"));

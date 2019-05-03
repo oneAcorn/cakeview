@@ -80,18 +80,16 @@ public class CircleUtil {
     /**
      * 获取扇形中心点坐标
      *
-     * @param sAngle 扇形起始角度
-     * @param tAngle 扇形结束角度
-     * @param cX     圆心
-     * @param cY     圆心
-     * @param radius 半径
+     * @param sAngle     扇形起始角度
+     * @param sweepAngle 扇形总度数
+     * @param cX         圆心
+     * @param cY         圆心
+     * @param radius     半径
      * @return 扇形中心点坐标
      */
-    public static PointF getSectorCenterPosition(float sAngle, float tAngle, int cX, int cY, int radius) {
-        // 计算中心角度
-        // 如:一个扇形,起始角度为10,结束角度为40,则arc=10+(40-10)/2
-        float angle = sAngle + (tAngle - sAngle) / 2;
-        return getPositionByAngle(angle, radius, cX, cY);
+    public static PointF getSectorCenterPosition(float sAngle, float sweepAngle, int cX, int cY, int radius) {
+        float angle = sAngle + (sweepAngle) / 2;
+        return getPositionByAngle(angle, radius / 2, cX, cY);
     }
 
     /**
@@ -111,12 +109,13 @@ public class CircleUtil {
 
     /**
      * targetAngle是否在sectorStartAngle+sectorEndAngle描述的扇形区域内
+     *
      * @param targetAngle
      * @param sectorStartAngle
      * @param sectorEndAngle
      * @return
      */
-    public static boolean isContainAngle(float targetAngle,float sectorStartAngle,float sectorEndAngle){
+    public static boolean isContainAngle(float targetAngle, float sectorStartAngle, float sectorEndAngle) {
         return (Float.compare(targetAngle, sectorStartAngle) == 0 ||
                 Float.compare(targetAngle, sectorStartAngle) == 1) &&
                 Float.compare(targetAngle, sectorEndAngle) == -1;

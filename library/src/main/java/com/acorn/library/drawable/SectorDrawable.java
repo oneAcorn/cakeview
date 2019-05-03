@@ -57,15 +57,18 @@ public class SectorDrawable extends BaseSectorDrawable<PieEntry> {
 
     @Override
     public void draw(Canvas canvas) {
-        if (null != mRectF && null != getPieEntry()) {
-            mPaint.setColor(mPieEntry.getColor());
-            canvas.drawArc(mRectF, mPieEntry.getStartAngle(), mPieEntry.getSweepAngle(), true, mPaint);
+        if (null != mPieEntry) {
+            if (null != mRectF) {
+                mPaint.setColor(mPieEntry.getColor());
+                canvas.drawArc(mRectF, mPieEntry.getStartAngle(), mPieEntry.getSweepAngle(), true, mPaint);
+            }
         }
     }
 
     @Override
     public void offsetAngle(float offsetAngle) {
         mPieEntry.setStartAngle((360f + mPieEntry.getStartAngle() + offsetAngle) % 360f);
+        notifySectorChange(mPieEntry, getOriginCx(), getOriginCy(), radius);
         isStartAngleChanged = true;
         invalidateSelf();
     }
@@ -164,6 +167,7 @@ public class SectorDrawable extends BaseSectorDrawable<PieEntry> {
 
     private void computeRectF(int cx, int cy) {
         mRectF = new RectF(cx - radius, cy - radius, cx + radius, cy + radius);
+        notifySectorChange(mPieEntry,getOriginCx(),getOriginCy(),radius);
     }
 
     private void updateGraphics(int cx, int cy) {
@@ -172,6 +176,7 @@ public class SectorDrawable extends BaseSectorDrawable<PieEntry> {
         if (lastCy == -1)
             lastCy = cy;
         mRectF.offset(cx - lastCx, cy - lastCy);
+        notifySectorChange(mPieEntry,cx,cy,radius);
         lastCx = cx;
         lastCy = cy;
     }

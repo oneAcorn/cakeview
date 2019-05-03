@@ -4,6 +4,8 @@ public class PieEntry {
     //此饼图项占比0~1
     private float value;
     private int color;
+    //是否在饼图上显示文字
+    private boolean isShowPieText;
     private String title;
     //字体大小sp
     private int textSize;
@@ -92,5 +94,13 @@ public class PieEntry {
 
     public void setDefaultPie(boolean defaultPie) {
         isDefaultPie = defaultPie;
+    }
+
+    public boolean isShowPieText() {
+        return isShowPieText;
+    }
+
+    public void setShowPieText(boolean showPieText) {
+        isShowPieText = showPieText;
     }
 }
