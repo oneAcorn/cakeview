@@ -1,9 +1,11 @@
 package com.acorn.library.drawable;
 
+import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
 
 import com.acorn.library.entry.PieEntry;
 import com.acorn.library.interfaces.OnSectorChangeListener;

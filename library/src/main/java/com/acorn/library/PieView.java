@@ -6,10 +6,10 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v4.view.MotionEventCompat;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -28,6 +28,7 @@ import com.acorn.library.interfaces.PieTextVisibleFilter;
 import com.acorn.library.interfaces.SectorFactory;
 import com.acorn.library.utils.CircleUtil;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,14 +45,13 @@ public class PieView extends View {
     private List<BaseTextDrawable> mTextDrawables;
     //在扇形区外部带指示线的文字drawable
     private List<BaseTextDrawable> mIndicateTextDrawables;
-    //当总值小于1时,扇形的文本
-    private static final String otherWord = "其他";
+//    //当总值小于1时,扇形的文本
+//    private static final String otherWord = "其他";
 
     private OnPieViewItemClickListener mOnPieViewItemClickListener;
     private Handler mHandler = new Handler();
     private static final int MAX_SINGLE_CLICK_TIME = 50;// 单击最长等待时间
     private int downX, downY;
-    private int moveX, moveY;
     //最小触摸移动距离
     private int minTouchSlop;
     /**
@@ -62,17 +62,10 @@ public class PieView extends View {
      * 最小滑动速率
      */
     private int minFlingVelocity;
-    /**
-     * 最大滑动速率
-     */
-    private int maxFlingVelocity;
     private ValueAnimator inertiaAnim;
     private int inertPace = 700;
-
     //圆心
     private int cx, cy;
-    //半径
-    private int radius;
 
     //是否点击高亮
     private boolean isHighlightEnable = true;
@@ -116,7 +109,7 @@ public class PieView extends View {
         //初始化最小和最大滑动速率
         ViewConfiguration vc = ViewConfiguration.get(context);
         minFlingVelocity = vc.getScaledMinimumFlingVelocity() * 8;
-        maxFlingVelocity = vc.getScaledMaximumFlingVelocity();
+//        maxFlingVelocity = vc.getScaledMaximumFlingVelocity();
     }
 
     @Override
@@ -155,8 +148,8 @@ public class PieView extends View {
                 startDrag(event);
                 break;
             case MotionEvent.ACTION_MOVE:
-                moveX = (int) event.getX();
-                moveY = (int) event.getY();
+                int moveX = (int) event.getX();
+                int moveY = (int) event.getY();
                 if (null != mSingleClickRunnable && (Math.abs(moveX - downX) > minTouchSlop || Math.abs(moveY - downY) > minTouchSlop)) { //大于单击最小移动距离,移除单击runnable
                     mHandler.removeCallbacks(mSingleClickRunnable);
                 }
@@ -197,7 +190,7 @@ public class PieView extends View {
             mVelocityTracker = VelocityTracker.obtain();
             mVelocityTracker.addMovement(event);
         }
-        log("startDrag " + lastAngle);
+//        log("startDrag " + lastAngle);
     }
 
     private void onDragging(MotionEvent event) {
@@ -208,7 +201,7 @@ public class PieView extends View {
         float offsetAngle = computeOffset(moveAngle, lastAngle);
         isClockwise = offsetAngle >= 0;
 
-        log("onDragging " + ",moveAngle " + moveAngle + ",lastAngle " + lastAngle + ",offset " + offsetAngle);
+//        log("onDragging " + ",moveAngle " + moveAngle + ",lastAngle " + lastAngle + ",offset " + offsetAngle);
         for (BaseSectorDrawable sectorDrawable : mSectorDrawables) {
             sectorDrawable.offsetAngle(offsetAngle);
         }
@@ -265,7 +258,7 @@ public class PieView extends View {
             if (inertiaAnim == null)
                 initInertiaAnim();
             inertiaAnim.setDuration((long) (velocity / 10f));
-            log("computeInertiaAnimator " + velocity);
+//            log("computeInertiaAnimator " + velocity);
             inertiaAnim.start();
         }
     }
@@ -284,7 +277,7 @@ public class PieView extends View {
                     sectorDrawable.offsetAngle(isClockwise ? (fraction - lastInertiaFraction) * inertPace :
                             0 - ((fraction - lastInertiaFraction) * inertPace));
                 }
-                log("initInertiaAnim " + fraction + "," + lastInertiaFraction);
+//                log("initInertiaAnim " + fraction + "," + lastInertiaFraction);
                 lastInertiaFraction = fraction;
             }
         });
@@ -318,39 +311,33 @@ public class PieView extends View {
         Log.i("PieView", string);
     }
 
-    public void setPieEntries(List<PieEntry> pieEntries) {
-        setPieEntries(pieEntries, new SectorFactory<PieEntry>() {
-            @Override
-            public BaseSectorDrawable createSector(PieEntry pieEntry, int position) {
-                return new SectorDrawable(pieEntry);
-            }
-        });
+    public <T extends PieEntry> void setPieEntries(List<T> pieEntries) {
+        Class<T> clazz;
+        ParameterizedType type = (ParameterizedType) this.getClass()
+                .getGenericSuperclass();
+        clazz = (Class<T>) type.getActualTypeArguments()[0];
+        if (null != clazz && clazz.isInstance(PieEntry.class)) {
+            setPieEntries(pieEntries, new SectorFactory<T, SectorDrawable>() {
+                @Override
+                public SectorDrawable createSector(T pieEntry, int position) {
+                    return new SectorDrawable(pieEntry);
+                }
+            }, new PieTextFactory<PieEntry, SectorTextDrawable>() {
+                @Override
+                public SectorTextDrawable createPieText(@NonNull PieEntry pieEntry) {
+                    return new SectorTextDrawable(getContext(), pieEntry);
+                }
+            }, new PieTextFactory<T, SectorIndicateTextDrawable>() {
+                @Override
+                public SectorIndicateTextDrawable createPieText(@NonNull T pieEntry) {
+                    return new SectorIndicateTextDrawable(getContext(), pieEntry);
+                }
+            });
+        }
     }
 
-    public void setPieEntries(final List<PieEntry> pieEntries, SectorFactory sectorFactory) {
-        setPieEntries(pieEntries, sectorFactory, new PieTextFactory() {
-            @Override
-            public BaseTextDrawable createPieText(PieEntry pieEntry) {
-                if (pieEntry == null)
-                    return null;
-                return new SectorTextDrawable(getContext(),pieEntry);
-            }
-        });
-    }
-
-    public void setPieEntries(final List<PieEntry> pieEntries, SectorFactory sectorFactory, PieTextFactory pieTextFactory) {
-        setPieEntries(pieEntries, sectorFactory, pieTextFactory,
-                new PieTextFactory() {
-                    @Override
-                    public BaseTextDrawable createPieText(PieEntry pieEntry) {
-                        if (pieEntry == null)
-                            return null;
-                        return new SectorIndicateTextDrawable(getContext(), pieEntry);
-                    }
-                });
-    }
-
-    public void setPieEntries(List<PieEntry> pieEntries, SectorFactory sectorFactory, PieTextFactory pieTextFactory, PieTextFactory pieIndicateTextFactory) {
+    public <T extends PieEntry, K extends BaseSectorDrawable, U extends BaseTextDrawable, E extends BaseTextDrawable>
+    void setPieEntries(List<T> pieEntries, SectorFactory<? super T, ? super K> sectorFactory, PieTextFactory<? super T, ? super U> pieTextFactory, PieTextFactory<? super T, ? super E> pieIndicateTextFactory) {
         ensureSectorDrawables(revisePieEntries(pieEntries), sectorFactory, pieTextFactory, pieIndicateTextFactory);
         invalidate();
     }
@@ -363,7 +350,7 @@ public class PieView extends View {
         }
     }
 
-    private List<PieEntry> revisePieEntries(List<PieEntry> pieEntries) {
+    private <T extends PieEntry> List<T> revisePieEntries(List<T> pieEntries) {
 
         float valueSum = 0;
         if (null != pieEntries && !pieEntries.isEmpty()) {
@@ -408,13 +395,14 @@ public class PieView extends View {
         return pieEntries;
     }
 
-    private void ensureSectorDrawables(List<? extends PieEntry> pieEntries, SectorFactory sectorFactory, PieTextFactory pieTextFactory, PieTextFactory pieIndicateTextFactory) {
+    private <T extends PieEntry, K extends BaseSectorDrawable, U extends BaseTextDrawable, E extends BaseTextDrawable>
+    void ensureSectorDrawables(List<T> pieEntries, SectorFactory<? super T, ? super K> sectorFactory, PieTextFactory<? super T, ? super U> pieTextFactory, PieTextFactory<? super T, ? super E> pieIndicateTextFactory) {
         mSectorDrawables = new ArrayList<>();
         mTextDrawables = new ArrayList<>();
         mIndicateTextDrawables = new ArrayList<>();
         int length = pieEntries.size();
         for (int i = 0; i < length; i++) {
-            PieEntry pieEntry = pieEntries.get(i);
+            T pieEntry = pieEntries.get(i);
             BaseSectorDrawable sectorDrawable = sectorFactory.createSector(pieEntry, i);
             sectorDrawable.setCallback(this);
             mSectorDrawables.add(sectorDrawable);
