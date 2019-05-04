@@ -19,7 +19,7 @@ import com.acorn.library.utils.CircleUtil;
 public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
     private static final float DEFAULT_HOLLOW_LENGTH_RATE = 0.2f;
     //默认扇形区占比(给弹出动画预留空间)
-    private static final float DEFAULT_SECTOR_RADIUS_RATE = 0.45f;
+    private static final float DEFAULT_SECTOR_RADIUS_RATE = 0.4f;
     //高亮动画突出距离比0~1
     private static final float DEFAULT_HIGHLIGHT_DISTANCE_RATE = 0.9f;
     //扇形半径占比0f~0.5f
@@ -146,6 +146,8 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
         sectorPath.arcTo(sectorRectF, mPieEntry.getStartAngle() + mPieEntry.getSweepAngle(), -mPieEntry.getSweepAngle());
         PointF point2 = CircleUtil.getPositionByAngle(mPieEntry.getStartAngle(), (int) hollowRadius, cx, cy);
         sectorPath.lineTo(point2.x, point2.y);
+
+        notifySectorChange(mPieEntry, cx, cy, radius);
     }
 
     private void updateGraphics(int cx, int cy) {
@@ -156,6 +158,8 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
         sectorPath.offset(cx - lastCx, cy - lastCy);
         lastCx = cx;
         lastCy = cy;
+
+        notifySectorChange(mPieEntry, cx, cy, radius);
     }
 
     private boolean isEqualOrLessThanZero(float value) {

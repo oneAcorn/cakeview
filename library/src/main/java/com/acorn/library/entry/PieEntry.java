@@ -10,6 +10,15 @@ public class PieEntry {
     //字体大小sp
     private int textSize;
     private int textColor;
+    //外层指示文字
+    private String indicateText;
+    //外层指示文字线颜色
+    private int indicateLineColor;
+    //外层指示文字颜色
+    private int indicateTextColor;
+    //外层指示文字字体大小
+    private int indicateTextSize;
+    private boolean isShowIndicateText;
     private float startAngle;
     private float sweepAngle;
     private boolean isDefaultPie;
@@ -102,5 +111,45 @@ public class PieEntry {
 
     public void setShowPieText(boolean showPieText) {
         isShowPieText = showPieText;
+    }
+
+    public int getIndicateLineColor() {
+        return indicateLineColor;
+    }
+
+    public void setIndicateLineColor(int indicateLineColor) {
+        this.indicateLineColor = indicateLineColor;
+    }
+
+    public int getIndicateTextSize() {
+        return indicateTextSize;
+    }
+
+    public void setIndicateTextSize(int indicateTextSize) {
+        this.indicateTextSize = indicateTextSize;
+    }
+
+    public String getIndicateText() {
+        return indicateText;
+    }
+
+    public void setIndicateText(String indicateText) {
+        this.indicateText = indicateText;
+    }
+
+    public boolean isShowIndicateText() {
+        return isShowIndicateText;
+    }
+
+    public void setShowIndicateText(boolean showIndicateText) {
+        isShowIndicateText = showIndicateText;
+    }
+
+    public int getIndicateTextColor() {
+        return indicateTextColor;
+    }
+
+    public void setIndicateTextColor(int indicateTextColor) {
+        this.indicateTextColor = indicateTextColor;
     }
 }

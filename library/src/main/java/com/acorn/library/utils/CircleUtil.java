@@ -28,6 +28,21 @@ public class CircleUtil {
     }
 
     /**
+     * 根据角度angle获取在此角与圆心连线中距离圆心为distanceToCenter远的点
+     *
+     * @param sAngle           以圆心为起点水平向右作边a,与此边a按顺时针方向的夹角
+     * @param sweepAngle       扫过的角度
+     * @param distanceToCenter 距离圆心的距离
+     * @param cX               圆心
+     * @param cY               圆心
+     * @return
+     */
+    public static PointF getPositionByAngle(float sAngle, float sweepAngle, int distanceToCenter, int cX, int cY) {
+        float angle = sAngle + (sweepAngle / 2);
+        return getPositionByAngle(angle, distanceToCenter, cX, cY);
+    }
+
+    /**
      * 根据坐标计算点相对圆心的角度,与从圆心水平向右作的边的夹角
      *
      * @param x1 坐标

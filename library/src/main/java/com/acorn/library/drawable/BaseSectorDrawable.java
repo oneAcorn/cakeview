@@ -8,6 +8,9 @@ import android.graphics.drawable.Drawable;
 import com.acorn.library.entry.PieEntry;
 import com.acorn.library.interfaces.OnSectorChangeListener;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 扇形
  */
@@ -16,7 +19,7 @@ public abstract class BaseSectorDrawable<T extends PieEntry> extends Drawable {
     private int originCx, originCy;
     private boolean isHighlighting;
     protected T mPieEntry;
-    private OnSectorChangeListener<T> mOnSectorChangeListener;
+    private List<OnSectorChangeListener<T>> mOnSectorChangeListeners;
 
     public BaseSectorDrawable(T pieEntry) {
         this.mPieEntry = pieEntry;
@@ -33,8 +36,11 @@ public abstract class BaseSectorDrawable<T extends PieEntry> extends Drawable {
     public abstract void unPress();
 
     protected void notifySectorChange(T pieEntry, int cx, int cy, int radius) {
-        if (null != mOnSectorChangeListener)
-            mOnSectorChangeListener.onSectorChange(pieEntry, cx, cy, radius);
+        if (null != mOnSectorChangeListeners && !mOnSectorChangeListeners.isEmpty()) {
+            for (OnSectorChangeListener<T> onSectorChangeListener : mOnSectorChangeListeners) {
+                onSectorChangeListener.onSectorChange(pieEntry, cx, cy, radius);
+            }
+        }
     }
 
     /**
@@ -77,8 +83,25 @@ public abstract class BaseSectorDrawable<T extends PieEntry> extends Drawable {
 
     public abstract void offsetAngle(float offsetAngle);
 
-    public void setOnSectorChangeListener(OnSectorChangeListener<T> onSectorChangeListener) {
-        mOnSectorChangeListener = onSectorChangeListener;
+    public void addOnSectorChangeListener(OnSectorChangeListener<T> onSectorChangeListener) {
+        if (null == mOnSectorChangeListeners)
+            mOnSectorChangeListeners = new ArrayList<>();
+        mOnSectorChangeListeners.add(onSectorChangeListener);
+    }
+
+    public void removeOnSectorChangeListener(OnSectorChangeListener<T> onSectorChangeListener) {
+        if (mOnSectorChangeListeners == null)
+            return;
+        mOnSectorChangeListeners.remove(onSectorChangeListener);
+        if (mOnSectorChangeListeners.isEmpty())
+            mOnSectorChangeListeners = null;
+    }
+
+    public void removeAllOnSectorChangeListener() {
+        if (mOnSectorChangeListeners == null)
+            return;
+        mOnSectorChangeListeners.clear();
+        mOnSectorChangeListeners = null;
     }
 
     @Override

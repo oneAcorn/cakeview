@@ -19,6 +19,7 @@ import android.view.animation.DecelerateInterpolator;
 import com.acorn.library.drawable.BaseSectorDrawable;
 import com.acorn.library.drawable.BaseTextDrawable;
 import com.acorn.library.drawable.SectorDrawable;
+import com.acorn.library.drawable.SectorIndicateTextDrawable;
 import com.acorn.library.drawable.SectorTextDrawable;
 import com.acorn.library.entry.PieEntry;
 import com.acorn.library.interfaces.OnPieViewItemClickListener;
@@ -32,8 +33,6 @@ import java.util.List;
 
 public class PieView extends View {
     private static final int CIRCLE_TOTAL_ANGLE = 360;
-    private static final int DEFAULT_TEXT_SIZE = 12;
-    private static final int DEFAULT_TEXT_COLOR = 0xffffffff;
     //当总值小于1时,"其他"扇形的默认颜色
     private static final int DEFAULT_OTHER_SECTOR_COLOR = 0xFFCED5CE;
     private final int[] defaultSectorColors = new int[]{0xff4F50A0, 0xff649B9A,
@@ -41,7 +40,10 @@ public class PieView extends View {
             0xff663300};
 
     private List<BaseSectorDrawable> mSectorDrawables;
+    //在扇形区内部的文字drawable
     private List<BaseTextDrawable> mTextDrawables;
+    //在扇形区外部带指示线的文字drawable
+    private List<BaseTextDrawable> mIndicateTextDrawables;
     //当总值小于1时,扇形的文本
     private static final String otherWord = "其他";
 
@@ -127,6 +129,11 @@ public class PieView extends View {
         }
         if (null != mTextDrawables && !mTextDrawables.isEmpty()) {
             for (BaseTextDrawable textDrawable : mTextDrawables) {
+                textDrawable.draw(canvas);
+            }
+        }
+        if (null != mIndicateTextDrawables && !mIndicateTextDrawables.isEmpty()) {
+            for (BaseTextDrawable textDrawable : mIndicateTextDrawables) {
                 textDrawable.draw(canvas);
             }
         }
@@ -320,22 +327,31 @@ public class PieView extends View {
         });
     }
 
-    public void setPieEntries(List<PieEntry> pieEntries, SectorFactory sectorFactory) {
-        final int defaultTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, DEFAULT_TEXT_SIZE, getResources().getDisplayMetrics());
+    public void setPieEntries(final List<PieEntry> pieEntries, SectorFactory sectorFactory) {
         setPieEntries(pieEntries, sectorFactory, new PieTextFactory() {
             @Override
             public BaseTextDrawable createPieText(PieEntry pieEntry) {
                 if (pieEntry == null)
                     return null;
-                if (pieEntry.getTextSize() == 0)
-                    return new SectorTextDrawable(pieEntry, defaultTextSize);
-                return new SectorTextDrawable(pieEntry, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, pieEntry.getTextSize(), getResources().getDisplayMetrics()));
+                return new SectorTextDrawable(getContext(),pieEntry);
             }
         });
     }
 
-    public void setPieEntries(List<PieEntry> pieEntries, SectorFactory sectorFactory, PieTextFactory pieTextFactory) {
-        ensureSectorDrawables(revisePieEntries(pieEntries), sectorFactory, pieTextFactory);
+    public void setPieEntries(final List<PieEntry> pieEntries, SectorFactory sectorFactory, PieTextFactory pieTextFactory) {
+        setPieEntries(pieEntries, sectorFactory, pieTextFactory,
+                new PieTextFactory() {
+                    @Override
+                    public BaseTextDrawable createPieText(PieEntry pieEntry) {
+                        if (pieEntry == null)
+                            return null;
+                        return new SectorIndicateTextDrawable(getContext(), pieEntry);
+                    }
+                });
+    }
+
+    public void setPieEntries(List<PieEntry> pieEntries, SectorFactory sectorFactory, PieTextFactory pieTextFactory, PieTextFactory pieIndicateTextFactory) {
+        ensureSectorDrawables(revisePieEntries(pieEntries), sectorFactory, pieTextFactory, pieIndicateTextFactory);
         invalidate();
     }
 
@@ -375,9 +391,6 @@ public class PieView extends View {
                     pie.setColor(defaultSectorColors[lastDefaultColorIndex]);
                     lastDefaultColorIndex++;
                 }
-                if (pie.getTextColor() == 0) {
-                    pie.setTextColor(DEFAULT_TEXT_COLOR);
-                }
             }
             if (colorCount != 0 && colorCount != pieEntries.size()) {
                 throw new IllegalStateException("you must set all of the color of PieEntry when you already set one of them");
@@ -395,21 +408,32 @@ public class PieView extends View {
         return pieEntries;
     }
 
-    private void ensureSectorDrawables(List<? extends PieEntry> pieEntries, SectorFactory sectorFactory, PieTextFactory pieTextFactory) {
+    private void ensureSectorDrawables(List<? extends PieEntry> pieEntries, SectorFactory sectorFactory, PieTextFactory pieTextFactory, PieTextFactory pieIndicateTextFactory) {
         mSectorDrawables = new ArrayList<>();
         mTextDrawables = new ArrayList<>();
+        mIndicateTextDrawables = new ArrayList<>();
         int length = pieEntries.size();
         for (int i = 0; i < length; i++) {
             PieEntry pieEntry = pieEntries.get(i);
             BaseSectorDrawable sectorDrawable = sectorFactory.createSector(pieEntry, i);
             sectorDrawable.setCallback(this);
-            BaseTextDrawable textDrawable = pieTextFactory.createPieText(pieEntry);
-            if (null != textDrawable) {
-                textDrawable.setCallback(this);
-                sectorDrawable.setOnSectorChangeListener(textDrawable);
-            }
             mSectorDrawables.add(sectorDrawable);
-            mTextDrawables.add(textDrawable);
+            if (null != pieTextFactory) {
+                BaseTextDrawable textDrawable = pieTextFactory.createPieText(pieEntry);
+                if (null != textDrawable) {
+                    textDrawable.setCallback(this);
+                    sectorDrawable.addOnSectorChangeListener(textDrawable);
+                }
+                mTextDrawables.add(textDrawable);
+            }
+            if (null != pieIndicateTextFactory) {
+                BaseTextDrawable textDrawable = pieIndicateTextFactory.createPieText(pieEntry);
+                if (null != textDrawable) {
+                    textDrawable.setCallback(this);
+                    sectorDrawable.addOnSectorChangeListener(textDrawable);
+                }
+                mIndicateTextDrawables.add(textDrawable);
+            }
         }
     }
 
@@ -440,6 +464,11 @@ public class PieView extends View {
         }
         if (null != mTextDrawables && !mTextDrawables.isEmpty()) {
             for (BaseTextDrawable textDrawable : mTextDrawables) {
+                textDrawable.setBounds(rect);
+            }
+        }
+        if (null != mIndicateTextDrawables && !mIndicateTextDrawables.isEmpty()) {
+            for (BaseTextDrawable textDrawable : mIndicateTextDrawables) {
                 textDrawable.setBounds(rect);
             }
         }
