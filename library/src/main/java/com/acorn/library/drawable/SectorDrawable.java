@@ -18,9 +18,9 @@ import com.acorn.library.utils.CircleUtil;
  */
 public class SectorDrawable extends BaseSectorDrawable<PieEntry> {
     //默认扇形区占比(给弹出动画预留空间)
-    private static final float DEFAULT_SECTOR_RADIUS_RATE = 0.4f;
+    public static final float DEFAULT_SECTOR_RADIUS_RATE = 0.4f;
     //高亮动画突出距离比0~1
-    private static final float DEFAULT_HIGHLIGHT_DISTANCE_RATE = 0.9f;
+    public static final float DEFAULT_HIGHLIGHT_DISTANCE_RATE = 0.9f;
     //扇形半径占比0f~0.5f
     private float sectorRadiusRate;
     //高亮动画弹出距离占比
@@ -68,7 +68,7 @@ public class SectorDrawable extends BaseSectorDrawable<PieEntry> {
     @Override
     public void offsetAngle(float offsetAngle) {
         mPieEntry.setStartAngle((360f + mPieEntry.getStartAngle() + offsetAngle) % 360f);
-        notifySectorChange(mPieEntry, getOriginCx(), getOriginCy(), radius);
+        notifySectorChange(mPieEntry, getOriginCx(), getOriginCy(), radius, Source.ROTATE);
         isStartAngleChanged = true;
         invalidateSelf();
     }
@@ -158,16 +158,16 @@ public class SectorDrawable extends BaseSectorDrawable<PieEntry> {
     @Override
     protected void onBoundsChange(Rect bounds) {
         super.onBoundsChange(bounds);
-        cx = getOriginCx();
-        cy = getOriginCy();
+        cx = (int) (bounds.width() / 2f);
+        cy = (int) (bounds.height() / 2f);
         float size = Math.min(bounds.width(), bounds.height());
         radius = (int) (size * sectorRadiusRate);
+        notifySectorChange(mPieEntry, cx, cy, radius, Source.INIT);
         computeRectF(cx, cy);
     }
 
     private void computeRectF(int cx, int cy) {
         mRectF = new RectF(cx - radius, cy - radius, cx + radius, cy + radius);
-        notifySectorChange(mPieEntry,getOriginCx(),getOriginCy(),radius);
     }
 
     private void updateGraphics(int cx, int cy) {
@@ -176,7 +176,7 @@ public class SectorDrawable extends BaseSectorDrawable<PieEntry> {
         if (lastCy == -1)
             lastCy = cy;
         mRectF.offset(cx - lastCx, cy - lastCy);
-        notifySectorChange(mPieEntry,cx,cy,radius);
+        notifySectorChange(mPieEntry, cx, cy, radius, Source.HIGHLIGHT);
         lastCx = cx;
         lastCy = cy;
     }

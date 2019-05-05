@@ -22,17 +22,13 @@ public class HollowSectorIndicateTextDrawable extends BaseTextDrawable<HollowPie
     private Path mPath;
     private Paint mTextPaint, mPathPaint;
 
-    public HollowSectorIndicateTextDrawable(Context context, HollowPieEntry pieEntry) {
-        super(pieEntry);
+    public HollowSectorIndicateTextDrawable(Context context) {
+        super(context);
         mTextPaint = new Paint();
         mTextPaint.setAntiAlias(true);  //抗锯齿
-        mTextPaint.setColor(pieEntry.getIndicateTextColor() == 0 ? DEFAULT_TEXT_COLOR : pieEntry.getIndicateTextColor());
-        mTextPaint.setTextSize(pieEntry.getIndicateTextSize() <= 0 ? DensityUtils.sp2px(context, DEFAULT_TEXT_SIZE) :
-                DensityUtils.sp2px(context, pieEntry.getIndicateTextSize()));
 
         mPathPaint = new Paint();
         mPathPaint.setAntiAlias(true);  //抗锯齿
-        mPathPaint.setColor(pieEntry.getIndicateLineColor() == 0 ? DEFAULT_LINE_COLOR : pieEntry.getIndicateLineColor());
         mPathPaint.setStyle(Paint.Style.STROKE);
         mPathPaint.setStrokeWidth(DensityUtils.dp2px(context, 1));
 
@@ -42,18 +38,27 @@ public class HollowSectorIndicateTextDrawable extends BaseTextDrawable<HollowPie
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-        if (getPieEntry() != null && mPath != null) {
+        if (getPieEntry() != null && mPath != null && getPieEntry().isShowPieIndicateText()) {
             canvas.drawPath(mPath, mPathPaint);
             canvas.drawText(getPieEntry().getIndicateText(), mTextPoint.x, mTextPoint.y, mTextPaint);
         }
     }
 
     @Override
-    public void setTextPoint(HollowPieEntry pieEntry, int cx, int cy, int radius) {
+    public void setTextPoint(HollowPieEntry pieEntry, int cx, int cy, int radius, int source) {
         if (TextUtils.isEmpty(pieEntry.getIndicateText())) {
             mPath = null;
             return;
         }
+        if (source == BaseSectorDrawable.Source.HIGHLIGHT)
+            return;
+        if (source == BaseSectorDrawable.Source.INIT) {
+            mTextPaint.setColor(pieEntry.getIndicateTextColor() == 0 ? DEFAULT_TEXT_COLOR : pieEntry.getIndicateTextColor());
+            mTextPaint.setTextSize(pieEntry.getIndicateTextSize() <= 0 ? DensityUtils.sp2px(getContext(), DEFAULT_TEXT_SIZE) :
+                    DensityUtils.sp2px(getContext(), pieEntry.getIndicateTextSize()));
+            mPathPaint.setColor(pieEntry.getIndicateLineColor() == 0 ? DEFAULT_LINE_COLOR : pieEntry.getIndicateLineColor());
+        }
+
         PointF centerPoint = CircleUtil.getPositionByAngle(pieEntry.getStartAngle(), pieEntry.getSweepAngle(),
                 (int) ((radius * pieEntry.getHollowLengthRate()) + (radius - (radius * pieEntry.getHollowLengthRate())) / 2), cx, cy);
         mPath = new Path();
@@ -74,6 +79,7 @@ public class HollowSectorIndicateTextDrawable extends BaseTextDrawable<HollowPie
         }
         float textPointY = lineEnd.y + mTextPaint.getTextSize() / 2;
         mTextPoint = new PointF(textPointX, textPointY);
+        invalidateSelf();
     }
 
     private int getLine1Radius(PieEntry pieEntry, int radius) {

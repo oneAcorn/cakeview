@@ -3,13 +3,16 @@ package com.acorn.library.entry;
 public class PieEntry {
     //此饼图项占比0~1
     private float value;
+    //饼图颜色
     private int color;
     //是否在饼图上显示文字
-    private boolean isShowPieText;
+    private boolean isShowPieText = true;
     private String title;
+    private int textColor;
     //字体大小sp
     private int textSize;
-    private int textColor;
+    //是否在饼图上显示指示文字
+    private boolean isShowPieIndicateText = true;
     //外层指示文字
     private String indicateText;
     //外层指示文字线颜色
@@ -18,27 +21,49 @@ public class PieEntry {
     private int indicateTextColor;
     //外层指示文字字体大小
     private int indicateTextSize;
-    private boolean isShowIndicateText;
     private float startAngle;
     private float sweepAngle;
-    private boolean isDefaultPie;
+
+    public PieEntry(PieEntry pieEntry) {
+        this.value = pieEntry.value;
+        this.color = pieEntry.color;
+        this.isShowPieText = pieEntry.isShowPieText;
+        this.title = pieEntry.title;
+        this.textColor = pieEntry.textColor;
+        this.textSize = pieEntry.textSize;
+        this.isShowPieIndicateText = pieEntry.isShowPieIndicateText;
+        this.indicateText = pieEntry.indicateText;
+        this.indicateLineColor = pieEntry.indicateLineColor;
+        this.indicateTextColor = pieEntry.indicateTextColor;
+        this.indicateTextSize = pieEntry.indicateTextSize;
+        this.startAngle = pieEntry.startAngle;
+        this.sweepAngle = pieEntry.sweepAngle;
+    }
+
+    public PieEntry(float value) {
+        this.value = value;
+    }
 
     public PieEntry(float value, String title) {
         this.value = value;
         this.title = title;
     }
 
-    public PieEntry(float value, String title, int textSize) {
+    public PieEntry(float value, String title, String indicateText) {
         this.value = value;
         this.title = title;
-        this.textSize = textSize;
+        this.indicateText = indicateText;
     }
 
-    public PieEntry(float value, String title, int textSize, int color) {
+    public PieEntry(float value, String title, int textColor, int textSize, String indicateText, int indicateLineColor, int indicateTextColor, int indicateTextSize) {
         this.value = value;
-        this.color = color;
         this.title = title;
+        this.textColor = textColor;
         this.textSize = textSize;
+        this.indicateText = indicateText;
+        this.indicateLineColor = indicateLineColor;
+        this.indicateTextColor = indicateTextColor;
+        this.indicateTextSize = indicateTextSize;
     }
 
     public float getValue() {
@@ -97,14 +122,6 @@ public class PieEntry {
         this.textColor = textColor;
     }
 
-    public boolean isDefaultPie() {
-        return isDefaultPie;
-    }
-
-    public void setDefaultPie(boolean defaultPie) {
-        isDefaultPie = defaultPie;
-    }
-
     public boolean isShowPieText() {
         return isShowPieText;
     }
@@ -137,19 +154,19 @@ public class PieEntry {
         this.indicateText = indicateText;
     }
 
-    public boolean isShowIndicateText() {
-        return isShowIndicateText;
-    }
-
-    public void setShowIndicateText(boolean showIndicateText) {
-        isShowIndicateText = showIndicateText;
-    }
-
     public int getIndicateTextColor() {
         return indicateTextColor;
     }
 
     public void setIndicateTextColor(int indicateTextColor) {
         this.indicateTextColor = indicateTextColor;
+    }
+
+    public boolean isShowPieIndicateText() {
+        return isShowPieIndicateText;
+    }
+
+    public void setShowPieIndicateText(boolean showPieIndicateText) {
+        isShowPieIndicateText = showPieIndicateText;
     }
 }

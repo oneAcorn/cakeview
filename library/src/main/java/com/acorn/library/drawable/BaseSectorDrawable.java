@@ -18,7 +18,7 @@ import java.util.List;
  */
 public abstract class BaseSectorDrawable<T extends PieEntry> extends Drawable {
     //圆心
-    private int originCx, originCy;
+    private int originCx, originCy, originRadius;
     private boolean isHighlighting;
     protected T mPieEntry;
     private List<OnSectorChangeListener<T>> mOnSectorChangeListeners;
@@ -37,10 +37,21 @@ public abstract class BaseSectorDrawable<T extends PieEntry> extends Drawable {
      */
     public abstract void unPress();
 
-    protected void notifySectorChange(T pieEntry, int cx, int cy, int radius) {
+    public void notifyDataChanged() {
+        if (null != getPieEntry() && originRadius > 0) {
+            notifySectorChange(getPieEntry(), originCx, originCy, originRadius, Source.INIT);
+        }
+    }
+
+    protected void notifySectorChange(T pieEntry, int cx, int cy, int radius, int source) {
+        if (source == Source.INIT) {
+            originCx = cx;
+            originCy = cy;
+            originRadius = radius;
+        }
         if (null != mOnSectorChangeListeners && !mOnSectorChangeListeners.isEmpty()) {
             for (OnSectorChangeListener<T> onSectorChangeListener : mOnSectorChangeListeners) {
-                onSectorChangeListener.onSectorChange(pieEntry, cx, cy, radius);
+                onSectorChangeListener.onSectorChange(pieEntry, cx, cy, radius, source);
             }
         }
     }
@@ -72,6 +83,10 @@ public abstract class BaseSectorDrawable<T extends PieEntry> extends Drawable {
 
     public int getOriginCy() {
         return originCy;
+    }
+
+    public int getOriginRadius() {
+        return originRadius;
     }
 
     /**
@@ -107,13 +122,6 @@ public abstract class BaseSectorDrawable<T extends PieEntry> extends Drawable {
     }
 
     @Override
-    protected void onBoundsChange(Rect bounds) {
-        super.onBoundsChange(bounds);
-        originCx = (int) (bounds.width() / 2f);
-        originCy = (int) (bounds.height() / 2f);
-    }
-
-    @Override
     public void setAlpha(int alpha) {
 
     }
@@ -126,5 +134,11 @@ public abstract class BaseSectorDrawable<T extends PieEntry> extends Drawable {
     @Override
     public int getOpacity() {
         return PixelFormat.TRANSLUCENT;
+    }
+
+    public class Source {
+        public static final int INIT = 0;
+        public static final int ROTATE = 1;
+        public static final int HIGHLIGHT = 2;
     }
 }

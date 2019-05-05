@@ -112,6 +112,7 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
         isStartAngleChanged = true;
         mPieEntry.setStartAngle((360f + mPieEntry.getStartAngle() + offsetAngle) % 360f);
         computeGraphics(getOriginCx(), getOriginCy());
+        notifySectorChange(mPieEntry, cx, cy, radius, Source.ROTATE);
         invalidateSelf();
     }
 
@@ -119,11 +120,12 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
     protected void onBoundsChange(Rect bounds) {
         super.onBoundsChange(bounds);
         float size = Math.min(bounds.width(), bounds.height());
-        cx = getOriginCx();
-        cy = getOriginCy();
+        cx = (int) (bounds.width() / 2f);
+        cy = (int) (bounds.height() / 2f);
         radius = (int) (size * sectorRadiusRate);
-        computeRect(getOriginCx(), getOriginCy());
-        computeGraphics(getOriginCx(), getOriginCy());
+        notifySectorChange(mPieEntry, cx, cy, radius, Source.INIT);
+        computeRect(cx, cy);
+        computeGraphics(cx, cy);
     }
 
     private void computeRect(int cx, int cy) {
@@ -146,8 +148,6 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
         sectorPath.arcTo(sectorRectF, mPieEntry.getStartAngle() + mPieEntry.getSweepAngle(), -mPieEntry.getSweepAngle());
         PointF point2 = CircleUtil.getPositionByAngle(mPieEntry.getStartAngle(), (int) hollowRadius, cx, cy);
         sectorPath.lineTo(point2.x, point2.y);
-
-        notifySectorChange(mPieEntry, cx, cy, radius);
     }
 
     private void updateGraphics(int cx, int cy) {
@@ -159,7 +159,7 @@ public class HollowSectorDrawable extends BaseSectorDrawable<HollowPieEntry> {
         lastCx = cx;
         lastCy = cy;
 
-        notifySectorChange(mPieEntry, cx, cy, radius);
+        notifySectorChange(mPieEntry, cx, cy, radius, Source.HIGHLIGHT);
     }
 
     private boolean isEqualOrLessThanZero(float value) {

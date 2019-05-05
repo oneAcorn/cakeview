@@ -31,9 +31,8 @@ import com.acorn.library.interfaces.PieTextFactory;
 import com.acorn.library.interfaces.PieTextVisibleFilter;
 import com.acorn.library.interfaces.SectorFactory;
 import com.acorn.library.utils.CircleUtil;
-import com.acorn.library.utils.GenericsUtils;
+import com.acorn.library.utils.DensityUtils;
 
-import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,14 +73,14 @@ public class PieView extends View {
 
     //是否点击高亮
     private boolean isHighlightEnable = true;
-    private boolean isAutoUnpressOther = false;
+    private boolean isAutoUnpressOther = true;
 
     private Runnable mSingleClickRunnable = new Runnable() {
         @Override
         public void run() {
             BaseSectorDrawable clickSectorDrawable = getTouchSectorDrawable(downX, downY);
-            if (null != mOnPieViewItemClickListener) {
-                mOnPieViewItemClickListener.onPieClick(clickSectorDrawable, 0);
+            if (null != mOnPieViewItemClickListener && null != clickSectorDrawable) {
+                mOnPieViewItemClickListener.onPieClick(clickSectorDrawable.getPieEntry());
             }
             if (isHighlightEnable && null != clickSectorDrawable) {
                 if (clickSectorDrawable.isHighlighting()) {
@@ -316,59 +315,82 @@ public class PieView extends View {
         Log.i("PieView", string);
     }
 
-    public <T extends PieEntry> void setPieEntries(List<T> pieEntries) {
-        if (null == pieEntries || pieEntries.isEmpty()) {
-            throw new IllegalStateException("pieEntries is null or empty");
-        }
-        Class clazz= GenericsUtils.getSuperClassGenricType(pieEntries.get(0).getClass());
-        if (null != clazz && clazz.isInstance(HollowPieEntry.class)) {
-            setPieEntries(pieEntries, new SectorFactory<T, HollowSectorDrawable>() {
-                @Override
-                public HollowSectorDrawable createSector(T pieEntry, int position) {
-                    return new HollowSectorDrawable((HollowPieEntry) pieEntry);
-                }
-            }, new PieTextFactory<T, HollowSectorTextDrawable>() {
-                @Override
-                public HollowSectorTextDrawable createPieText(@NonNull PieEntry pieEntry) {
-                    return new HollowSectorTextDrawable(getContext(), (HollowPieEntry) pieEntry);
-                }
-            }, new PieTextFactory<T, HollowSectorIndicateTextDrawable>() {
-                @Override
-                public HollowSectorIndicateTextDrawable createPieText(@NonNull PieEntry pieEntry) {
-                    return new HollowSectorIndicateTextDrawable(getContext(), (HollowPieEntry) pieEntry);
-                }
-            });
-        } else {
-            setPieEntries(pieEntries, new SectorFactory<T, SectorDrawable>() {
-                @Override
-                public SectorDrawable createSector(T pieEntry, int position) {
-                    return new SectorDrawable(pieEntry);
-                }
-            }, new PieTextFactory<T, SectorTextDrawable>() {
-                @Override
-                public SectorTextDrawable createPieText(@NonNull T pieEntry) {
-                    return new SectorTextDrawable(getContext(), pieEntry);
-                }
-            }, new PieTextFactory<T, SectorIndicateTextDrawable>() {
-                @Override
-                public SectorIndicateTextDrawable createPieText(@NonNull T pieEntry) {
-                    return new SectorIndicateTextDrawable(getContext(), pieEntry);
-                }
-            });
-        }
+    public void setPieEntries(List<PieEntry> pieEntries) {
+        setPieEntries(pieEntries, new SectorFactory<PieEntry, SectorDrawable>() {
+            @Override
+            public SectorDrawable createSector(@NonNull PieEntry pieEntry, int position) {
+                return new SectorDrawable(pieEntry);
+            }
+        }, new PieTextFactory<SectorTextDrawable>() {
+            @Override
+            public SectorTextDrawable createPieText() {
+                return new SectorTextDrawable(getContext());
+            }
+        }, new PieTextFactory<SectorIndicateTextDrawable>() {
+            @Override
+            public SectorIndicateTextDrawable createPieText() {
+                return new SectorIndicateTextDrawable(getContext());
+            }
+        });
+    }
+
+    public void setPieEntries(List<PieEntry> pieEntries, SectorFactory<PieEntry, SectorDrawable> sectorFactory) {
+        setPieEntries(pieEntries, sectorFactory, new PieTextFactory<SectorTextDrawable>() {
+            @Override
+            public SectorTextDrawable createPieText() {
+                return new SectorTextDrawable(getContext());
+            }
+        }, new PieTextFactory<SectorIndicateTextDrawable>() {
+            @Override
+            public SectorIndicateTextDrawable createPieText() {
+                return new SectorIndicateTextDrawable(getContext());
+            }
+        });
+    }
+
+    public void setHollowPieEntries(List<HollowPieEntry> pieEntries) {
+        setPieEntries(pieEntries, new SectorFactory<HollowPieEntry, HollowSectorDrawable>() {
+            @Override
+            public HollowSectorDrawable createSector(@NonNull HollowPieEntry pieEntry, int position) {
+                return new HollowSectorDrawable(pieEntry);
+            }
+        }, new PieTextFactory<HollowSectorTextDrawable>() {
+            @Override
+            public HollowSectorTextDrawable createPieText() {
+                return new HollowSectorTextDrawable(getContext());
+            }
+        }, new PieTextFactory<HollowSectorIndicateTextDrawable>() {
+            @Override
+            public HollowSectorIndicateTextDrawable createPieText() {
+                return new HollowSectorIndicateTextDrawable(getContext());
+            }
+        });
     }
 
     public <T extends PieEntry, K extends BaseSectorDrawable, U extends BaseTextDrawable, E extends BaseTextDrawable>
-    void setPieEntries(List<T> pieEntries, SectorFactory<T, ? super K> sectorFactory, PieTextFactory<T, ? super U> pieTextFactory, PieTextFactory<T, ? super E> pieIndicateTextFactory) {
+    void setPieEntries(List<T> pieEntries, SectorFactory<T, ? super K> sectorFactory, PieTextFactory<? super U> pieTextFactory, PieTextFactory<? super E> pieIndicateTextFactory) {
+        if (null == pieEntries || pieEntries.isEmpty()) {
+            throw new IllegalStateException("pieEntries is null or empty");
+        }
         ensureSectorDrawables(revisePieEntries(pieEntries), sectorFactory, pieTextFactory, pieIndicateTextFactory);
         invalidate();
     }
 
-    public void setPieTextVisible(PieTextVisibleFilter filter) {
+    public void setPieTextVisibleFilter(PieTextVisibleFilter<? super PieEntry> filter) {
         if (null == mSectorDrawables || mSectorDrawables.isEmpty() || null == filter)
             return;
         for (BaseSectorDrawable sectorDrawable : mSectorDrawables) {
             sectorDrawable.getPieEntry().setShowPieText(filter.isShowText(sectorDrawable.getPieEntry()));
+            sectorDrawable.notifyDataChanged();
+        }
+    }
+
+    public void setPieIndicateTextVisibleFilter(PieTextVisibleFilter<? super PieEntry> filter) {
+        if (null == mSectorDrawables || mSectorDrawables.isEmpty() || null == filter)
+            return;
+        for (BaseSectorDrawable sectorDrawable : mSectorDrawables) {
+            sectorDrawable.getPieEntry().setShowPieIndicateText(filter.isShowText(sectorDrawable.getPieEntry()));
+            sectorDrawable.notifyDataChanged();
         }
     }
 
@@ -378,8 +400,6 @@ public class PieView extends View {
         if (null != pieEntries && !pieEntries.isEmpty()) {
             //上个扇形的结束边界角度
             float lastEndAngle = 0;
-            //PieEntry中已设置color的数量
-            int colorCount = 0;
             int lastDefaultColorIndex = 0;
             for (PieEntry pie : pieEntries) {
                 if (Float.compare(pie.getValue(), 0) == -1 || Float.compare(pie.getValue(), 1) == 1) {
@@ -392,17 +412,12 @@ public class PieView extends View {
                 pie.setSweepAngle(pie.getValue() * CIRCLE_TOTAL_ANGLE);
                 lastEndAngle = pie.getStartAngle() + pie.getSweepAngle();
                 valueSum += pie.getValue();
-                if (pie.getColor() != 0)
-                    colorCount++;
-                else {
+                if (pie.getColor() == 0) {
                     if (lastDefaultColorIndex >= defaultSectorColors.length)
                         lastDefaultColorIndex = 0;
                     pie.setColor(defaultSectorColors[lastDefaultColorIndex]);
                     lastDefaultColorIndex++;
                 }
-            }
-            if (colorCount != 0 && colorCount != pieEntries.size()) {
-                throw new IllegalStateException("you must set all of the color of PieEntry when you already set one of them");
             }
         } else if (null == pieEntries) {
             pieEntries = new ArrayList<>();
@@ -418,10 +433,16 @@ public class PieView extends View {
     }
 
     private <T extends PieEntry, K extends BaseSectorDrawable, U extends BaseTextDrawable, E extends BaseTextDrawable>
-    void ensureSectorDrawables(List<T> pieEntries, SectorFactory<T, ? super K> sectorFactory, PieTextFactory<T, ? super U> pieTextFactory, PieTextFactory<T, ? super E> pieIndicateTextFactory) {
+    void ensureSectorDrawables(List<T> pieEntries, SectorFactory<T, ? super K> sectorFactory, PieTextFactory<? super U> pieTextFactory, PieTextFactory<? super E> pieIndicateTextFactory) {
         mSectorDrawables = new ArrayList<>();
         mTextDrawables = new ArrayList<>();
         mIndicateTextDrawables = new ArrayList<>();
+        int width = getWidth();
+        int height = getHeight();
+        Rect rect = null;
+        if (width > 0 && height > 0) {
+            rect = new Rect(0, 0, width, height);
+        }
         int length = pieEntries.size();
         for (int i = 0; i < length; i++) {
             T pieEntry = pieEntries.get(i);
@@ -429,21 +450,27 @@ public class PieView extends View {
             sectorDrawable.setCallback(this);
             mSectorDrawables.add(sectorDrawable);
             if (null != pieTextFactory) {
-                BaseTextDrawable textDrawable = pieTextFactory.createPieText(pieEntry);
+                BaseTextDrawable textDrawable = pieTextFactory.createPieText();
                 if (null != textDrawable) {
                     textDrawable.setCallback(this);
                     sectorDrawable.addOnSectorChangeListener(textDrawable);
+                    if (rect != null)
+                        textDrawable.setBounds(rect);
                 }
                 mTextDrawables.add(textDrawable);
             }
             if (null != pieIndicateTextFactory) {
-                BaseTextDrawable textDrawable = pieIndicateTextFactory.createPieText(pieEntry);
+                BaseTextDrawable textDrawable = pieIndicateTextFactory.createPieText();
                 if (null != textDrawable) {
                     textDrawable.setCallback(this);
                     sectorDrawable.addOnSectorChangeListener(textDrawable);
+                    if (rect != null)
+                        textDrawable.setBounds(rect);
                 }
                 mIndicateTextDrawables.add(textDrawable);
             }
+            if (rect != null)
+                sectorDrawable.setBounds(rect);
         }
     }
 
@@ -461,11 +488,23 @@ public class PieView extends View {
     }
 
     @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        int size = DensityUtils.dp2px(getContext(), 150);
+        setMeasuredDimension(Math.max(getSuggestedMinimumWidth(), resolveSize(size, widthMeasureSpec)),
+                Math.max(getSuggestedMinimumHeight(), resolveSize(size, heightMeasureSpec)));
+    }
+
+    @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         cx = (int) (w / 2f);
         cy = (int) (h / 2f);
 
+        setBounds(w, h);
+    }
+
+    private void setBounds(int w, int h) {
         Rect rect = new Rect(0, 0, w, h);
         if (null != mSectorDrawables && !mSectorDrawables.isEmpty()) {
             for (BaseSectorDrawable sectorDrawable : mSectorDrawables) {

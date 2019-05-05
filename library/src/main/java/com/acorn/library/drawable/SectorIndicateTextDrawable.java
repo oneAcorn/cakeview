@@ -15,23 +15,20 @@ public class SectorIndicateTextDrawable extends BaseTextDrawable<PieEntry> {
     private static final int DEFAULT_TEXT_SIZE = 12;
     private static final int DEFAULT_TEXT_COLOR = 0xff000000;
     private static final int DEFAULT_LINE_COLOR = 0xff000000;
-    private static final float indicateLine1Rate = 0.15f;
+    private static final float indicateLine1Rate = 0.2f;
     private static final float indicateLine2MaxRate = 0.5f;
     private float textMargin;
     private Path mPath;
     private Paint mTextPaint, mPathPaint;
 
-    public SectorIndicateTextDrawable(Context context, PieEntry pieEntry) {
-        super(pieEntry);
+
+    public SectorIndicateTextDrawable(Context context) {
+        super(context);
         mTextPaint = new Paint();
         mTextPaint.setAntiAlias(true);  //抗锯齿
-        mTextPaint.setColor(pieEntry.getIndicateTextColor() == 0 ? DEFAULT_TEXT_COLOR : pieEntry.getIndicateTextColor());
-        mTextPaint.setTextSize(pieEntry.getIndicateTextSize() <= 0 ? DensityUtils.sp2px(context, DEFAULT_TEXT_SIZE) :
-                DensityUtils.sp2px(context, pieEntry.getIndicateTextSize()));
 
         mPathPaint = new Paint();
         mPathPaint.setAntiAlias(true);  //抗锯齿
-        mPathPaint.setColor(pieEntry.getIndicateLineColor() == 0 ? DEFAULT_LINE_COLOR : pieEntry.getIndicateLineColor());
         mPathPaint.setStyle(Paint.Style.STROKE);
         mPathPaint.setStrokeWidth(DensityUtils.dp2px(context, 1));
 
@@ -41,17 +38,25 @@ public class SectorIndicateTextDrawable extends BaseTextDrawable<PieEntry> {
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-        if (getPieEntry() != null && mPath != null) {
+        if (getPieEntry() != null && mPath != null && getPieEntry().isShowPieIndicateText()) {
             canvas.drawPath(mPath, mPathPaint);
             canvas.drawText(getPieEntry().getIndicateText(), mTextPoint.x, mTextPoint.y, mTextPaint);
         }
     }
 
     @Override
-    public void setTextPoint(PieEntry pieEntry, int cx, int cy, int radius) {
+    public void setTextPoint(PieEntry pieEntry, int cx, int cy, int radius, int source) {
         if (TextUtils.isEmpty(pieEntry.getIndicateText())) {
             mPath = null;
             return;
+        }
+        if (source == BaseSectorDrawable.Source.HIGHLIGHT)
+            return;
+        if (source == BaseSectorDrawable.Source.INIT) {
+            mTextPaint.setColor(pieEntry.getIndicateTextColor() == 0 ? DEFAULT_TEXT_COLOR : pieEntry.getIndicateTextColor());
+            mTextPaint.setTextSize(pieEntry.getIndicateTextSize() <= 0 ? DensityUtils.sp2px(getContext(), DEFAULT_TEXT_SIZE) :
+                    DensityUtils.sp2px(getContext(), pieEntry.getIndicateTextSize()));
+            mPathPaint.setColor(pieEntry.getIndicateLineColor() == 0 ? DEFAULT_LINE_COLOR : pieEntry.getIndicateLineColor());
         }
         PointF centerPoint = CircleUtil.getSectorCenterPosition(pieEntry.getStartAngle(), pieEntry.getSweepAngle(), cx, cy, radius);
         mPath = new Path();
@@ -72,6 +77,7 @@ public class SectorIndicateTextDrawable extends BaseTextDrawable<PieEntry> {
         }
         float textPointY = lineEnd.y + mTextPaint.getTextSize() / 2;
         mTextPoint = new PointF(textPointX, textPointY);
+        invalidateSelf();
     }
 
     private int getLine1Radius(PieEntry pieEntry, int radius) {

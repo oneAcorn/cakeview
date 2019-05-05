@@ -1,36 +1,24 @@
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <com.acorn.library.PieView
-        android:id="@+id/pieView"
-        android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:background="#BFE7DD"
-        android:layout_centerHorizontal="true"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"/>
-
-    <LinearLayout
-        android:id="@+id/ll"
+    <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/pieView"
-        android:background="#CED5CE"
-        android:orientation="horizontal"
-        android:visibility="visible">
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="20dp"
+        android:onClick="startPieActivity"
+        android:text="普通饼图demo"/>
 
-        <Button
-            android:id="@+id/btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="begin"/>
-
-        <Button
-            android:id="@+id/btn2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="begin2"/>
-    </LinearLayout>
-</RelativeLayout>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="20dp"
+        android:onClick="startHollowPieActivity"
+        android:text="中空饼图demo"/>
+</LinearLayout>
