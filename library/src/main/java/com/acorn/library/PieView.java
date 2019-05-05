@@ -18,15 +18,20 @@ import android.view.animation.DecelerateInterpolator;
 
 import com.acorn.library.drawable.BaseSectorDrawable;
 import com.acorn.library.drawable.BaseTextDrawable;
+import com.acorn.library.drawable.HollowSectorDrawable;
+import com.acorn.library.drawable.HollowSectorIndicateTextDrawable;
+import com.acorn.library.drawable.HollowSectorTextDrawable;
 import com.acorn.library.drawable.SectorDrawable;
 import com.acorn.library.drawable.SectorIndicateTextDrawable;
 import com.acorn.library.drawable.SectorTextDrawable;
+import com.acorn.library.entry.HollowPieEntry;
 import com.acorn.library.entry.PieEntry;
 import com.acorn.library.interfaces.OnPieViewItemClickListener;
 import com.acorn.library.interfaces.PieTextFactory;
 import com.acorn.library.interfaces.PieTextVisibleFilter;
 import com.acorn.library.interfaces.SectorFactory;
 import com.acorn.library.utils.CircleUtil;
+import com.acorn.library.utils.GenericsUtils;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -312,19 +317,36 @@ public class PieView extends View {
     }
 
     public <T extends PieEntry> void setPieEntries(List<T> pieEntries) {
-        Class<T> clazz;
-        ParameterizedType type = (ParameterizedType) this.getClass()
-                .getGenericSuperclass();
-        clazz = (Class<T>) type.getActualTypeArguments()[0];
-        if (null != clazz && clazz.isInstance(PieEntry.class)) {
+        if (null == pieEntries || pieEntries.isEmpty()) {
+            throw new IllegalStateException("pieEntries is null or empty");
+        }
+        Class clazz= GenericsUtils.getSuperClassGenricType(pieEntries.get(0).getClass());
+        if (null != clazz && clazz.isInstance(HollowPieEntry.class)) {
+            setPieEntries(pieEntries, new SectorFactory<T, HollowSectorDrawable>() {
+                @Override
+                public HollowSectorDrawable createSector(T pieEntry, int position) {
+                    return new HollowSectorDrawable((HollowPieEntry) pieEntry);
+                }
+            }, new PieTextFactory<T, HollowSectorTextDrawable>() {
+                @Override
+                public HollowSectorTextDrawable createPieText(@NonNull PieEntry pieEntry) {
+                    return new HollowSectorTextDrawable(getContext(), (HollowPieEntry) pieEntry);
+                }
+            }, new PieTextFactory<T, HollowSectorIndicateTextDrawable>() {
+                @Override
+                public HollowSectorIndicateTextDrawable createPieText(@NonNull PieEntry pieEntry) {
+                    return new HollowSectorIndicateTextDrawable(getContext(), (HollowPieEntry) pieEntry);
+                }
+            });
+        } else {
             setPieEntries(pieEntries, new SectorFactory<T, SectorDrawable>() {
                 @Override
                 public SectorDrawable createSector(T pieEntry, int position) {
                     return new SectorDrawable(pieEntry);
                 }
-            }, new PieTextFactory<PieEntry, SectorTextDrawable>() {
+            }, new PieTextFactory<T, SectorTextDrawable>() {
                 @Override
-                public SectorTextDrawable createPieText(@NonNull PieEntry pieEntry) {
+                public SectorTextDrawable createPieText(@NonNull T pieEntry) {
                     return new SectorTextDrawable(getContext(), pieEntry);
                 }
             }, new PieTextFactory<T, SectorIndicateTextDrawable>() {
@@ -337,7 +359,7 @@ public class PieView extends View {
     }
 
     public <T extends PieEntry, K extends BaseSectorDrawable, U extends BaseTextDrawable, E extends BaseTextDrawable>
-    void setPieEntries(List<T> pieEntries, SectorFactory<? super T, ? super K> sectorFactory, PieTextFactory<? super T, ? super U> pieTextFactory, PieTextFactory<? super T, ? super E> pieIndicateTextFactory) {
+    void setPieEntries(List<T> pieEntries, SectorFactory<T, ? super K> sectorFactory, PieTextFactory<T, ? super U> pieTextFactory, PieTextFactory<T, ? super E> pieIndicateTextFactory) {
         ensureSectorDrawables(revisePieEntries(pieEntries), sectorFactory, pieTextFactory, pieIndicateTextFactory);
         invalidate();
     }
@@ -396,7 +418,7 @@ public class PieView extends View {
     }
 
     private <T extends PieEntry, K extends BaseSectorDrawable, U extends BaseTextDrawable, E extends BaseTextDrawable>
-    void ensureSectorDrawables(List<T> pieEntries, SectorFactory<? super T, ? super K> sectorFactory, PieTextFactory<? super T, ? super U> pieTextFactory, PieTextFactory<? super T, ? super E> pieIndicateTextFactory) {
+    void ensureSectorDrawables(List<T> pieEntries, SectorFactory<T, ? super K> sectorFactory, PieTextFactory<T, ? super U> pieTextFactory, PieTextFactory<T, ? super E> pieIndicateTextFactory) {
         mSectorDrawables = new ArrayList<>();
         mTextDrawables = new ArrayList<>();
         mIndicateTextDrawables = new ArrayList<>();

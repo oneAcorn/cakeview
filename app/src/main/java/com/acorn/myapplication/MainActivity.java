@@ -1,13 +1,13 @@
 package com.acorn.myapplication;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.acorn.library.PieView;
 import com.acorn.library.drawable.BaseSectorDrawable;
-import com.acorn.library.drawable.BaseTextDrawable;
 import com.acorn.library.drawable.HollowSectorDrawable;
 import com.acorn.library.drawable.HollowSectorIndicateTextDrawable;
 import com.acorn.library.drawable.HollowSectorTextDrawable;
@@ -39,26 +39,23 @@ public class MainActivity extends AppCompatActivity {
 //                return true;
 //            }
 //        });
-        mPieView.setPieEntries(getTestData4(), new SectorFactory<HollowPieEntry>() {
-                    @Override
-                    public BaseSectorDrawable<HollowPieEntry> createSector(HollowPieEntry pieEntry, int position) {
-                        return new HollowSectorDrawable(pieEntry);
-                    }
-                },
-                new PieTextFactory<HollowPieEntry>() {
-                    @Override
-                    public BaseTextDrawable<HollowPieEntry> createPieText(HollowPieEntry pieEntry) {
-                        if (null == pieEntry)
-                            return null;
-                        return new HollowSectorTextDrawable(MainActivity.this, pieEntry);
-                    }
-                },
-                new PieTextFactory<HollowPieEntry>() {
-                    @Override
-                    public BaseTextDrawable<HollowPieEntry> createPieText(HollowPieEntry pieEntry) {
-                        return new HollowSectorIndicateTextDrawable(MainActivity.this, pieEntry);
-                    }
-                });
+//        mPieView.setPieEntries(getTestData4(), new SectorFactory<HollowPieEntry, HollowSectorDrawable>() {
+//            @Override
+//            public HollowSectorDrawable createSector(HollowPieEntry pieEntry, int position) {
+//                return null;
+//            }
+//        }, new PieTextFactory<HollowPieEntry, HollowSectorTextDrawable>() {
+//            @Override
+//            public HollowSectorTextDrawable createPieText(@NonNull HollowPieEntry pieEntry) {
+//                return null;
+//            }
+//        }, new PieTextFactory<HollowPieEntry, HollowSectorIndicateTextDrawable>() {
+//            @Override
+//            public HollowSectorIndicateTextDrawable createPieText(@NonNull HollowPieEntry pieEntry) {
+//                return null;
+//            }
+//        });
+        mPieView.setPieEntries(getTestData4());
         mPieView.setHighlightEnable(true);
         mPieView.setAutoUnpressOther(true);
         mPieView.setOnPieViewItemClickListener(new OnPieViewItemClickListener() {
@@ -122,8 +119,8 @@ public class MainActivity extends AppCompatActivity {
 //        return pieEntries;
 //    }
 
-    private List<PieEntry> getTestData4() {
-        List<PieEntry> pieEntries = new ArrayList<>();
+    private List<HollowPieEntry> getTestData4() {
+        List<HollowPieEntry> pieEntries = new ArrayList<>();
         HollowPieEntry hollowPieEntry1 = new HollowPieEntry(1f / 7f, "1", 14, 0xFFFF0000, 0.6f);
         hollowPieEntry1.setIndicateText("赤");
         pieEntries.add(hollowPieEntry1);

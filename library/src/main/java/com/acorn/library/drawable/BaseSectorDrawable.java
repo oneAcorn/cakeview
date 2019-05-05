@@ -85,7 +85,7 @@ public abstract class BaseSectorDrawable<T extends PieEntry> extends Drawable {
 
     public abstract void offsetAngle(float offsetAngle);
 
-    public void addOnSectorChangeListener(OnSectorChangeListener<T> onSectorChangeListener) {
+    public <K extends OnSectorChangeListener<T>> void addOnSectorChangeListener(K onSectorChangeListener) {
         if (null == mOnSectorChangeListeners)
             mOnSectorChangeListeners = new ArrayList<>();
         mOnSectorChangeListeners.add(onSectorChangeListener);
