@@ -76,8 +76,8 @@ dependencies {
 
 ![github](https://github.com/oneAcorn/cakeview/blob/master/20190506_093532.gif "按筛选条件显示/隐藏文字")
 
-1 只显示占比大于等于15%的饼图内文字
-2 只显示占比小于15%的指示线文字
+* 1 只显示占比大于等于15%的饼图内文字
+* 2 只显示占比小于15%的指示线文字
 
 ```java
         //大于等于0.15的显示饼图内文字
@@ -110,10 +110,10 @@ dependencies {
 
 ### 三 定义自己的扇形区域
 如果想实现自己的扇形区域
-1 需要先继承抽象类BaseSectorDrawable,实现其中必要的抽象方法,可参照SectorDrawable/HollowSectorDrawable
-2 继承抽象类BaseTextDrawable,饼图内文字(SectorTextDrawable/HollowSectorDrawable)
+* 1 需要先继承抽象类BaseSectorDrawable,实现其中必要的抽象方法,可参照SectorDrawable/HollowSectorDrawable
+* 2 继承抽象类BaseTextDrawable,饼图内文字(SectorTextDrawable/HollowSectorDrawable)
 和指示线文字(SectorIndicateTextDrawable/HollowSectorIndicateTextDrawable)都是该抽象类的子类,可供参考.
-3 BaseSectorDrawable和BaseTextDrawable的绑定通过调用BaseSectorDrawable内的方法设置监听器
+* 3 BaseSectorDrawable和BaseTextDrawable的绑定通过调用BaseSectorDrawable内的方法设置监听器
 ```java
     public <K extends OnSectorChangeListener<T>> void addOnSectorChangeListener(K onSectorChangeListener) {
         if (null == mOnSectorChangeListeners)
@@ -127,8 +127,8 @@ dependencies {
  public abstract void setTextPoint(T pieEntry, int cx, int cy, int radius, int source);
 ```
 通知文字Drawable扇形区域的初始化,旋转,高亮等的状态变化,请自行根据扇形区状态更新文字状态
-4 可根据自己需要继承PieEntry后,新增必要的参数
-5 最后调用PieView内方法,该方法通过工厂模式生成相应的扇形区,饼图内文字,指示线文字Drawable,请自行实现工厂生成接口
+* 4 可根据自己需要继承PieEntry后,新增必要的参数
+* 5 最后调用PieView内方法,该方法通过工厂模式生成相应的扇形区,饼图内文字,指示线文字Drawable,请自行实现工厂生成接口
 ```java
     /**
      *
