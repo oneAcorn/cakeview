@@ -177,7 +177,7 @@ public class PieActivity extends AppCompatActivity {
 
     private List<HollowPieEntry> pieEntryArrToHollowArr(@NonNull List<PieEntry> pieEntries) {
         List<HollowPieEntry> hollowPieEntries = new ArrayList<>();
-        float hollowLengthRate = 0.6f;
+        float hollowLengthRate = 0.6f; //距圆心多少距离内中空(0~1)
         for (PieEntry pieEntry : pieEntries) {
             HollowPieEntry hollowPieEntry = new HollowPieEntry(pieEntry, hollowLengthRate);
             hollowPieEntries.add(hollowPieEntry);
