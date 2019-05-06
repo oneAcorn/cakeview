@@ -146,7 +146,7 @@ dependencies {
         invalidate();
     }
 ```
-可参照中空模式饼图的实现
+    可参照中空模式饼图的实现
 ```java
         setPieEntries(pieEntries, new SectorFactory<HollowPieEntry, HollowSectorDrawable>() {
             @Override
