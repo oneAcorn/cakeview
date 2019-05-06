@@ -108,8 +108,8 @@ dependencies {
  mPieView.setAutoUnpressOther(false);
 ```
 
-### 三 定义自己的扇形区域
-如果想实现自己的扇形区域
+### 三 自定义饼图
+如果想实现自己的饼图
 * 1 需要先继承抽象类BaseSectorDrawable,实现其中必要的抽象方法,可参照SectorDrawable/HollowSectorDrawable
 * 2 继承抽象类BaseTextDrawable,饼图内文字(SectorTextDrawable/HollowSectorDrawable)
 和指示线文字(SectorIndicateTextDrawable/HollowSectorIndicateTextDrawable)都是该抽象类的子类,可供参考.
