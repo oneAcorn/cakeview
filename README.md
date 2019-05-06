@@ -113,7 +113,6 @@ dependencies {
 * 1 需要先继承抽象类BaseSectorDrawable,实现其中必要的抽象方法,可参照SectorDrawable/HollowSectorDrawable
 * 2 继承抽象类BaseTextDrawable,饼图内文字(SectorTextDrawable/HollowSectorDrawable)
 和指示线文字(SectorIndicateTextDrawable/HollowSectorIndicateTextDrawable)都是该抽象类的子类,可供参考.
-```
 * 3 BaseSectorDrawable和BaseTextDrawable的绑定通过调用BaseSectorDrawable内的方法设置监听器
 ```java
     public <K extends OnSectorChangeListener<T>> void addOnSectorChangeListener(K onSectorChangeListener) {
@@ -123,12 +122,11 @@ dependencies {
     }
 ```
 
-然后通过BaseTextDrawable内的抽象方法
+    然后通过BaseTextDrawable内的抽象方法
 ```java
  public abstract void setTextPoint(T pieEntry, int cx, int cy, int radius, int source);
 ```
-通知文字Drawable扇形区域的初始化,旋转,高亮等的状态变化,请自行根据扇形区状态更新文字状态
-```
+    通知文字Drawable扇形区域的初始化,旋转,高亮等的状态变化,请自行根据扇形区状态更新文字状态
 * 4 可根据自己需要继承PieEntry后,新增必要的参数
 * 5 最后调用PieView内方法,该方法通过工厂模式生成相应的扇形区,饼图内文字,指示线文字Drawable,请自行实现工厂生成接口
 ```java
