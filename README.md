@@ -70,7 +70,7 @@ dependencies {
         mPieView.setHollowPieEntries(pieEntries);
 ```
 
-##### 其他设置
+##### 3.其他设置
 
 按筛选条件显示/隐藏文字
 
