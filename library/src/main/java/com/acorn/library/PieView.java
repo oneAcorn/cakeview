@@ -162,14 +162,13 @@ public class PieView extends View {
                 }
                 break;
             case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
                 int upX = (int) event.getX();
                 int upY = (int) event.getY();
                 if (Math.abs(upX - downX) <= minTouchSlop && Math.abs(upY - downY) <= minTouchSlop && (null == inertiaAnim || !inertiaAnim.isRunning())) { //单击
                     mHandler.postDelayed(mSingleClickRunnable, MAX_SINGLE_CLICK_TIME);
                 }
                 stopDragging(upX, upY);
-                break;
-            case MotionEvent.ACTION_CANCEL:
                 break;
         }
         return true;
@@ -367,8 +366,15 @@ public class PieView extends View {
         });
     }
 
+    /**
+     *
+     * @param pieEntries 饼图实体
+     * @param sectorFactory 饼图工厂
+     * @param pieTextFactory 饼图内文字工厂
+     * @param pieIndicateTextFactory 指示线文字工厂
+     */
     public <T extends PieEntry, K extends BaseSectorDrawable, U extends BaseTextDrawable, E extends BaseTextDrawable>
-    void setPieEntries(List<T> pieEntries, SectorFactory<T, ? super K> sectorFactory, PieTextFactory<? super U> pieTextFactory, PieTextFactory<? super E> pieIndicateTextFactory) {
+    void setPieEntries(List<T> pieEntries, SectorFactory<T, K> sectorFactory, PieTextFactory<U> pieTextFactory, PieTextFactory<E> pieIndicateTextFactory) {
         if (null == pieEntries || pieEntries.isEmpty()) {
             throw new IllegalStateException("pieEntries is null or empty");
         }
@@ -433,7 +439,7 @@ public class PieView extends View {
     }
 
     private <T extends PieEntry, K extends BaseSectorDrawable, U extends BaseTextDrawable, E extends BaseTextDrawable>
-    void ensureSectorDrawables(List<T> pieEntries, SectorFactory<T, ? super K> sectorFactory, PieTextFactory<? super U> pieTextFactory, PieTextFactory<? super E> pieIndicateTextFactory) {
+    void ensureSectorDrawables(List<T> pieEntries, SectorFactory<T, K> sectorFactory, PieTextFactory<U> pieTextFactory, PieTextFactory<E> pieIndicateTextFactory) {
         mSectorDrawables = new ArrayList<>();
         mTextDrawables = new ArrayList<>();
         mIndicateTextDrawables = new ArrayList<>();
